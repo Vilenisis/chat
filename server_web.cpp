@@ -386,19 +386,21 @@ private:
     }
 
     // Иначе отдаём index.html
-    http::response<http::string_body> res{
+    auto res = std::make_shared<http::response<http::string_body>>(
       http::status::ok, req_.version()
-    };
-    res.set(http::field::server, "chat-beast");
-    res.set(http::field::content_type, "text/html; charset=utf-8");
-    res.keep_alive(req_.keep_alive());
-    res.body() = INDEX_HTML;
-    res.prepare_payload();
+    );
+    res->set(http::field::server, "chat-beast");
+    res->set(http::field::content_type, "text/html; charset=utf-8");
+    res->keep_alive(req_.keep_alive());
+    res->body() = INDEX_HTML;
+    res->prepare_payload();
 
     auto self = shared_from_this();
-    http::async_write(stream_, res, [self](beast::error_code ec, std::size_t){
-      self->do_close();
-    });
+    http::async_write(stream_, *res,
+      [self, res](beast::error_code ec, std::size_t){
+        boost::ignore_unused(ec);
+        self->do_close();
+      });
   }
 
   void do_close() {
