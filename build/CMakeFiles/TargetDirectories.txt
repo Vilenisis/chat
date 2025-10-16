@@ -1,0 +1,5 @@
+/Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/build/CMakeFiles/server.dir
+/Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/build/CMakeFiles/client.dir
+/Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/build/CMakeFiles/server_web.dir
+/Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/build/CMakeFiles/edit_cache.dir
+/Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/build/CMakeFiles/rebuild_cache.dir
