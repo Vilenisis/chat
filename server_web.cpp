@@ -5,11 +5,13 @@
 #include <boost/beast/websocket.hpp>
 #include <boost/asio/dispatch.hpp>
 #include <boost/asio/strand.hpp>
+#include <csignal>
 #include <iostream>
 #include <unordered_map>
 #include <unordered_set>
 #include <deque>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -420,10 +422,27 @@ public:
   Listener(boost::asio::io_context& ioc, tcp::endpoint ep, std::shared_ptr<SharedState> st)
     : ioc_(ioc), acceptor_(ioc), state_(std::move(st)) {
     beast::error_code ec;
+
     acceptor_.open(ep.protocol(), ec);
+    if (ec) {
+      throw std::runtime_error("Listener open failed: " + ec.message());
+    }
+
+    // Разрешаем переиспользовать порт, чтобы избежать залипания в TIME_WAIT.
     acceptor_.set_option(boost::asio::socket_base::reuse_address(true), ec);
+    if (ec) {
+      throw std::runtime_error("Listener reuse_address failed: " + ec.message());
+    }
+
     acceptor_.bind(ep, ec);
+    if (ec) {
+      throw std::runtime_error("Listener bind failed: " + ec.message());
+    }
+
     acceptor_.listen(boost::asio::socket_base::max_listen_connections, ec);
+    if (ec) {
+      throw std::runtime_error("Listener listen failed: " + ec.message());
+    }
   }
 
   void run() { do_accept(); }
@@ -436,9 +455,12 @@ private:
   }
 
   void on_accept(beast::error_code ec, tcp::socket socket) {
-    if (!ec) {
-      std::make_shared<HTTPSession>(std::move(socket), state_)->run();
+    if (ec) {
+      std::cerr << "accept error: " << ec.message() << "\n";
+      return do_accept();
     }
+
+    std::make_shared<HTTPSession>(std::move(socket), state_)->run();
     do_accept();
   }
 
@@ -449,6 +471,9 @@ private:
 
 int main(int argc, char** argv) {
   try {
+#if defined(SIGPIPE)
+    std::signal(SIGPIPE, SIG_IGN);
+#endif
     unsigned short port = 80;
     if (argc >= 2) port = static_cast<unsigned short>(std::stoi(argv[1]));
     boost::asio::io_context ioc;
