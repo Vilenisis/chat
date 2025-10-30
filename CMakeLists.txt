@@ -4,8 +4,12 @@ project(chat_cpp_asio LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# ИСПОЛЬЗУЕМ CONFIG-режим (новый Boost), без компонентов:
-find_package(Boost CONFIG REQUIRED)
+# Пробуем найти Boost в config-режиме (новые поставки, например vcpkg/homebrew).
+find_package(Boost CONFIG QUIET)
+if(NOT Boost_FOUND)
+  # На macOS через Homebrew чаще доступен модульный find_package без CONFIG.
+  find_package(Boost REQUIRED)
+endif()
 find_package(Threads REQUIRED)
 
 add_library(chat_core SHARED chat_lib.cpp)
@@ -17,8 +21,19 @@ add_executable(server server.cpp)
 add_executable(client client.cpp)
 add_executable(server_web server_web.cpp)
 
-# Новый Boost даёт импортируемую цель Boost::headers (только заголовки Asio)
+set(_boost_header_target "")
 if (TARGET Boost::headers)
+  set(_boost_header_target Boost::headers)
+elseif (TARGET Boost::boost)
+  set(_boost_header_target Boost::boost)
+endif()
+
+if (_boost_header_target)
+  target_link_libraries(chat_core PUBLIC ${_boost_header_target} Threads::Threads)
+  target_link_libraries(client PRIVATE ${_boost_header_target} Threads::Threads)
+  target_link_libraries(server_web PRIVATE ${_boost_header_target} Threads::Threads)
+else()
+  # На случай очень старых сборок Boost — подключим include-пути вручную
   target_link_libraries(chat_core PUBLIC Boost::headers Threads::Threads)
   target_link_libraries(client PRIVATE Boost::headers Threads::Threads)
   target_link_libraries(server_web PRIVATE Boost::headers Threads::Threads)
