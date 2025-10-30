@@ -34,6 +34,13 @@ if (_boost_header_target)
   target_link_libraries(server_web PRIVATE ${_boost_header_target} Threads::Threads)
 else()
   # На случай очень старых сборок Boost — подключим include-пути вручную
+else()
+  # На случай очень старых сборок Boost — подключим include-пути вручную
+  target_link_libraries(chat_core PUBLIC Boost::headers Threads::Threads)
+  target_link_libraries(client PRIVATE Boost::headers Threads::Threads)
+  target_link_libraries(server_web PRIVATE Boost::headers Threads::Threads)
+else()
+  # На случай старых сборок Boost — подстрахуемся
   target_include_directories(chat_core PUBLIC ${Boost_INCLUDE_DIRS})
   target_include_directories(client PRIVATE ${Boost_INCLUDE_DIRS})
   target_include_directories(server_web PRIVATE ${Boost_INCLUDE_DIRS})
