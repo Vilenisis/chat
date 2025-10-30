@@ -1,20 +1,24 @@
 #include <boost/asio.hpp>
+#include <boost/asio/dispatch.hpp>
+#include <boost/asio/strand.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/beast/version.hpp>
 #include <boost/beast/websocket.hpp>
-#include <boost/asio/dispatch.hpp>
-#include <boost/asio/strand.hpp>
+#include <algorithm>
+#include <atomic>
 #include <csignal>
-#include <iostream>
-#include <unordered_map>
-#include <unordered_set>
 #include <deque>
+#include <iostream>
 #include <memory>
+#include <mutex>
+#include <sstream>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
 #include <vector>
-#include <algorithm>
 
 namespace beast = boost::beast;
 namespace http  = beast::http;
@@ -90,6 +94,89 @@ input.addEventListener('keydown', (e) => { if (e.key === 'Enter') send(); });
 </script>
 </body></html>)HTML";
 
+static const char* ADMIN_HTML_TEMPLATE_HEAD = R"HTML(<!doctype html>
+<html lang="ru"><head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Chat Admin</title>
+<style>
+ body { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial; margin:0; background:#030712; color:#e5e7eb; }
+ header { padding:16px; background:#0f172a; border-bottom:1px solid #1f2937; font-size:20px; font-weight:600; }
+ main { padding:20px; max-width:720px; margin:0 auto; display:flex; flex-direction:column; gap:16px; }
+ textarea { width:100%; min-height:200px; background:#111827; border:1px solid #374151; border-radius:12px; padding:12px; color:#f8fafc; font-size:14px; line-height:1.4; }
+ button { align-self:flex-start; background:#2563eb; border:none; color:#f8fafc; padding:12px 20px; border-radius:12px; font-size:15px; cursor:pointer; }
+ button:hover { background:#1d4ed8; }
+ .status { padding:12px 16px; border-radius:12px; background:#111827; border:1px solid #374151; }
+</style>
+</head><body>
+  <header>Панель администратора чата</header>
+  <main>
+    <p>Загрузите обновление DLL: вставьте текст скрипта (например, вызов <code>repeat_last_message_twice</code>) и нажмите «Load».</p>
+    <label for="dllInput">DLL script</label>
+    <textarea id="dllInput">)HTML";
+
+static const char* ADMIN_HTML_TEMPLATE_TAIL = R"HTML(
+    <div style="display:flex; gap:12px; align-items:center;">
+      <button id="loadBtn">Load</button>
+      <span id="status" class="status"></span>
+    </div>
+  </main>
+<script>
+const dllInput = document.getElementById('dllInput');
+const loadBtn = document.getElementById('loadBtn');
+const statusEl = document.getElementById('status');
+
+function setStatus(text) {
+  statusEl.textContent = text;
+}
+
+function loadDll() {
+  fetch('/load', {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: dllInput.value
+  }).then(async (res) => {
+    const txt = await res.text();
+    setStatus(txt);
+  }).catch(() => setStatus('Ошибка загрузки DLL'));
+}
+
+loadBtn.addEventListener('click', loadDll);
+setStatus(window.__ADMIN_STATUS__ || 'Готово');
+</script>
+</body></html>)HTML";
+
+static std::string html_escape(const std::string& input) {
+  std::string out;
+  out.reserve(input.size());
+  for (char c : input) {
+    switch (c) {
+      case '&': out += "&amp;"; break;
+      case '<': out += "&lt;"; break;
+      case '>': out += "&gt;"; break;
+      case '"': out += "&quot;"; break;
+      case '\'': out += "&#39;"; break;
+      default: out += c; break;
+    }
+  }
+  return out;
+}
+
+static std::string js_escape(const std::string& input) {
+  std::string out;
+  out.reserve(input.size());
+  for (char c : input) {
+    switch (c) {
+      case '\\': out += "\\\\"; break;
+      case '\'': out += "\\'"; break;
+      case '\n': out += "\\n"; break;
+      case '\r': out += "\\r"; break;
+      default: out += c; break;
+    }
+  }
+  return out;
+}
+
 // ========= Общее состояние чата =========
 struct Message { std::string from, text; };
 
@@ -103,6 +190,9 @@ struct SharedState {
   std::unordered_map<std::string, std::unordered_set<std::string>> favorites;
   // офлайн: recipient -> deque(sender,text)
   std::unordered_map<std::string, std::deque<std::pair<std::string,std::string>>> offline_inbox;
+  std::atomic<bool> repeat_last_message_twice{false};
+  mutable std::mutex script_mutex;
+  std::string last_loaded_script;
 
   bool is_blocked(const std::string& receiver, const std::string& sender) {
     auto it = blacklist.find(receiver);
@@ -111,7 +201,31 @@ struct SharedState {
 
   void broadcast_public(const std::string& from, const std::string& text);
   void deliver_offline_if_any(const std::shared_ptr<class WSSession>& s);
+
+  void enable_repeat_last_message(bool value) { repeat_last_message_twice.store(value); }
+  bool repeat_enabled() const { return repeat_last_message_twice.load(); }
+  void update_last_script(std::string script) {
+    std::lock_guard<std::mutex> lock(script_mutex);
+    last_loaded_script = std::move(script);
+  }
+  std::string last_script() const {
+    std::lock_guard<std::mutex> lock(script_mutex);
+    return last_loaded_script;
+  }
 };
+
+static std::string render_admin_page(const std::shared_ptr<SharedState>& state) {
+  std::ostringstream page;
+  page << ADMIN_HTML_TEMPLATE_HEAD;
+  page << html_escape(state->last_script());
+  page << "\n</textarea>\n";
+  std::string status = state->repeat_enabled()
+    ? "Повтор последнего сообщения включен"
+    : "Повтор последнего сообщения отключен";
+  page << "    <script>window.__ADMIN_STATUS__ = '" << js_escape(status) << "';</script>\n";
+  page << ADMIN_HTML_TEMPLATE_TAIL;
+  return page.str();
+}
 
 // ========= WebSocket-сессия =========
 class WSSession : public std::enable_shared_from_this<WSSession> {
@@ -346,8 +460,11 @@ void SharedState::broadcast_public(const std::string& from, const std::string& t
     if (!s) continue;
     if (is_blocked(name, from)) continue;
     bool fav = favorites[name].count(from);
-    if (fav) s->send_text("FAV: " + from + ": " + text);
-    else     s->send_text("MSG: " + from + ": " + text);
+    std::string payload = (fav ? "FAV: " : "MSG: ") + from + ": " + text;
+    s->send_text(payload);
+    if (repeat_enabled()) {
+      s->send_text(payload);
+    }
   }
 }
 void SharedState::deliver_offline_if_any(const std::shared_ptr<WSSession>& s) {
@@ -416,6 +533,94 @@ private:
   std::shared_ptr<SharedState> state_;
 };
 
+class AdminHTTPSession : public std::enable_shared_from_this<AdminHTTPSession> {
+public:
+  AdminHTTPSession(tcp::socket&& socket, std::shared_ptr<SharedState> st)
+    : stream_(std::move(socket)), state_(std::move(st)) {}
+
+  void run() { do_read(); }
+
+private:
+  void do_read() {
+    req_ = {};
+    http::async_read(stream_, buffer_, req_,
+      beast::bind_front_handler(&AdminHTTPSession::on_read, shared_from_this()));
+  }
+
+  void on_read(beast::error_code ec, std::size_t) {
+    if (ec == http::error::end_of_stream) return do_close();
+    if (ec) return;
+
+    if (req_.method() == http::verb::post && req_.target() == "/load") {
+      handle_load();
+      return;
+    }
+
+    if (req_.method() == http::verb::get && (req_.target() == "/" || req_.target() == "/index.html")) {
+      handle_index();
+      return;
+    }
+
+    auto res = std::make_shared<http::response<http::string_body>>(http::status::not_found, req_.version());
+    res->set(http::field::server, "chat-admin");
+    res->set(http::field::content_type, "text/plain; charset=utf-8");
+    res->keep_alive(false);
+    res->body() = "Неизвестный запрос";
+    res->prepare_payload();
+    write_response(res);
+  }
+
+  void handle_index() {
+    auto body = render_admin_page(state_);
+    auto res = std::make_shared<http::response<http::string_body>>(http::status::ok, req_.version());
+    res->set(http::field::server, "chat-admin");
+    res->set(http::field::content_type, "text/html; charset=utf-8");
+    res->keep_alive(req_.keep_alive());
+    res->body() = std::move(body);
+    res->prepare_payload();
+    write_response(res);
+  }
+
+  void handle_load() {
+    state_->update_last_script(req_.body());
+    bool enable = req_.body().find("repeat_last_message_twice") != std::string::npos;
+    state_->enable_repeat_last_message(enable);
+
+    std::string message;
+    if (enable) {
+      message = "DLL обновление установлено: повтор последнего сообщения включен.";
+    } else {
+      message = "DLL загружена, но функция repeat_last_message_twice не найдена.";
+    }
+
+    auto res = std::make_shared<http::response<http::string_body>>(http::status::ok, req_.version());
+    res->set(http::field::server, "chat-admin");
+    res->set(http::field::content_type, "text/plain; charset=utf-8");
+    res->keep_alive(false);
+    res->body() = std::move(message);
+    res->prepare_payload();
+    write_response(res);
+  }
+
+  void write_response(const std::shared_ptr<http::response<http::string_body>>& res) {
+    auto self = shared_from_this();
+    http::async_write(stream_, *res,
+      [self, res](beast::error_code, std::size_t) {
+        self->do_close();
+      });
+  }
+
+  void do_close() {
+    beast::error_code ec;
+    stream_.socket().shutdown(tcp::socket::shutdown_send, ec);
+  }
+
+  beast::tcp_stream stream_;
+  beast::flat_buffer buffer_;
+  http::request<http::string_body> req_;
+  std::shared_ptr<SharedState> state_;
+};
+
 // ========= Listener =========
 class Listener : public std::enable_shared_from_this<Listener> {
 public:
@@ -469,19 +674,75 @@ private:
   std::shared_ptr<SharedState> state_;
 };
 
+class AdminListener : public std::enable_shared_from_this<AdminListener> {
+public:
+  AdminListener(boost::asio::io_context& ioc, tcp::endpoint ep, std::shared_ptr<SharedState> st)
+    : ioc_(ioc), acceptor_(ioc), state_(std::move(st)) {
+    beast::error_code ec;
+
+    acceptor_.open(ep.protocol(), ec);
+    if (ec) {
+      throw std::runtime_error("AdminListener open failed: " + ec.message());
+    }
+
+    acceptor_.set_option(boost::asio::socket_base::reuse_address(true), ec);
+    if (ec) {
+      throw std::runtime_error("AdminListener reuse_address failed: " + ec.message());
+    }
+
+    acceptor_.bind(ep, ec);
+    if (ec) {
+      throw std::runtime_error("AdminListener bind failed: " + ec.message());
+    }
+
+    acceptor_.listen(boost::asio::socket_base::max_listen_connections, ec);
+    if (ec) {
+      throw std::runtime_error("AdminListener listen failed: " + ec.message());
+    }
+  }
+
+  void run() { do_accept(); }
+
+private:
+  void do_accept() {
+    acceptor_.async_accept(
+      boost::asio::make_strand(ioc_),
+      beast::bind_front_handler(&AdminListener::on_accept, shared_from_this()));
+  }
+
+  void on_accept(beast::error_code ec, tcp::socket socket) {
+    if (ec) {
+      std::cerr << "admin accept error: " << ec.message() << "\n";
+      return do_accept();
+    }
+
+    std::make_shared<AdminHTTPSession>(std::move(socket), state_)->run();
+    do_accept();
+  }
+
+  boost::asio::io_context& ioc_;
+  tcp::acceptor acceptor_;
+  std::shared_ptr<SharedState> state_;
+};
+
 int main(int argc, char** argv) {
   try {
 #if defined(SIGPIPE)
     std::signal(SIGPIPE, SIG_IGN);
 #endif
-    unsigned short port = 80;
-    if (argc >= 2) port = static_cast<unsigned short>(std::stoi(argv[1]));
+    unsigned short admin_port = 80;
+    unsigned short chat_port = 8080;
+    if (argc >= 2) admin_port = static_cast<unsigned short>(std::stoi(argv[1]));
+    if (argc >= 3) chat_port = static_cast<unsigned short>(std::stoi(argv[2]));
     boost::asio::io_context ioc;
     auto state = std::make_shared<SharedState>();
-    auto ep = tcp::endpoint(tcp::v4(), port);
-    auto listener = std::make_shared<Listener>(ioc, ep, state);
-    listener->run();
-    std::cout << "HTTP+WS server listening on port " << port << " (open http://127.0.0.1/)\n";
+    auto chat_ep = tcp::endpoint(tcp::v4(), chat_port);
+    auto admin_ep = tcp::endpoint(tcp::v4(), admin_port);
+    auto chat_listener = std::make_shared<Listener>(ioc, chat_ep, state);
+    chat_listener->run();
+    auto admin_listener = std::make_shared<AdminListener>(ioc, admin_ep, state);
+    admin_listener->run();
+    std::cout << "Chat UI listening on port " << chat_port << ", admin panel on port " << admin_port << "\n";
     ioc.run();
   } catch (const std::exception& e) {
     std::cerr << "server_web error: " << e.what() << "\n";
