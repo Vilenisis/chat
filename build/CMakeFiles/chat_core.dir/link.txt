@@ -1,0 +1,1 @@
+/usr/bin/clang++ -g -arch arm64 -dynamiclib -Wl,-headerpad_max_install_names -o libchat_core.dylib -install_name @rpath/libchat_core.dylib CMakeFiles/chat_core.dir/chat_lib.cpp.o

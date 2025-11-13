@@ -117,6 +117,19 @@ depend:
 .PHONY : depend
 
 #=============================================================================
+# Target rules for targets named chat_core
+
+# Build rule for target.
+chat_core: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 chat_core
+.PHONY : chat_core
+
+# fast build rule for target.
+chat_core/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/chat_core.dir/build.make CMakeFiles/chat_core.dir/build
+.PHONY : chat_core/fast
+
+#=============================================================================
 # Target rules for targets named server
 
 # Build rule for target.
@@ -154,6 +167,30 @@ server_web: cmake_check_build_system
 server_web/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/server_web.dir/build.make CMakeFiles/server_web.dir/build
 .PHONY : server_web/fast
+
+chat_lib.o: chat_lib.cpp.o
+.PHONY : chat_lib.o
+
+# target to build an object file
+chat_lib.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/chat_core.dir/build.make CMakeFiles/chat_core.dir/chat_lib.cpp.o
+.PHONY : chat_lib.cpp.o
+
+chat_lib.i: chat_lib.cpp.i
+.PHONY : chat_lib.i
+
+# target to preprocess a source file
+chat_lib.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/chat_core.dir/build.make CMakeFiles/chat_core.dir/chat_lib.cpp.i
+.PHONY : chat_lib.cpp.i
+
+chat_lib.s: chat_lib.cpp.s
+.PHONY : chat_lib.s
+
+# target to generate assembly for a file
+chat_lib.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/chat_core.dir/build.make CMakeFiles/chat_core.dir/chat_lib.cpp.s
+.PHONY : chat_lib.cpp.s
 
 client.o: client.cpp.o
 .PHONY : client.o
@@ -235,9 +272,13 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
+	@echo "... chat_core"
 	@echo "... client"
 	@echo "... server"
 	@echo "... server_web"
+	@echo "... chat_lib.o"
+	@echo "... chat_lib.i"
+	@echo "... chat_lib.s"
 	@echo "... client.o"
 	@echo "... client.i"
 	@echo "... client.s"

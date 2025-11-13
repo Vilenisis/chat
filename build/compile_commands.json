@@ -1,6 +1,12 @@
 [
 {
   "directory": "/Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/build",
+  "command": "/usr/bin/clang++ -Dchat_core_EXPORTS -isystem /opt/homebrew/include -g -std=gnu++20 -arch arm64 -fPIC -o CMakeFiles/chat_core.dir/chat_lib.cpp.o -c /Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/chat_lib.cpp",
+  "file": "/Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/chat_lib.cpp",
+  "output": "CMakeFiles/chat_core.dir/chat_lib.cpp.o"
+},
+{
+  "directory": "/Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/build",
   "command": "/usr/bin/clang++  -isystem /opt/homebrew/include -g -std=gnu++20 -arch arm64 -o CMakeFiles/server.dir/server.cpp.o -c /Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/server.cpp",
   "file": "/Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/server.cpp",
   "output": "CMakeFiles/server.dir/server.cpp.o"

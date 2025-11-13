@@ -5,10 +5,10 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Пробуем найти Boost в config-режиме (новые поставки, например vcpkg/homebrew).
-find_package(Boost CONFIG QUIET)
+find_package(Boost CONFIG QUIET COMPONENTS system)
 if(NOT Boost_FOUND)
   # На macOS через Homebrew чаще доступен модульный find_package без CONFIG.
-  find_package(Boost REQUIRED)
+  find_package(Boost REQUIRED COMPONENTS system)
 endif()
 find_package(Threads REQUIRED)
 
@@ -31,22 +31,12 @@ endif()
 if (_boost_header_target)
   target_link_libraries(chat_core PUBLIC ${_boost_header_target} Threads::Threads)
   target_link_libraries(client PRIVATE ${_boost_header_target} Threads::Threads)
-  target_link_libraries(server_web PRIVATE ${_boost_header_target} Threads::Threads)
-else()
-  # На случай очень старых сборок Boost — подключим include-пути вручную
+  target_link_libraries(server_web PRIVATE ${_boost_header_target} Threads::Threads Boost::system)
 else()
   # На случай очень старых сборок Boost — подключим include-пути вручную
   target_link_libraries(chat_core PUBLIC Boost::headers Threads::Threads)
   target_link_libraries(client PRIVATE Boost::headers Threads::Threads)
-  target_link_libraries(server_web PRIVATE Boost::headers Threads::Threads)
-else()
-  # На случай старых сборок Boost — подстрахуемся
-  target_include_directories(chat_core PUBLIC ${Boost_INCLUDE_DIRS})
-  target_include_directories(client PRIVATE ${Boost_INCLUDE_DIRS})
-  target_include_directories(server_web PRIVATE ${Boost_INCLUDE_DIRS})
-  target_link_libraries(chat_core PUBLIC Threads::Threads)
-  target_link_libraries(client PRIVATE Threads::Threads)
-  target_link_libraries(server_web PRIVATE Threads::Threads)
+  target_link_libraries(server_web PRIVATE Boost::headers Threads::Threads Boost::system)
 endif()
 
 target_link_libraries(server PRIVATE chat_core)

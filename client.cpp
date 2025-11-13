@@ -8,6 +8,9 @@
 #include <vector>
 #include <cctype>
 
+
+
+
 // Разбивка UTF-8 на "символы" (кодпоинты), чтобы не резать кириллицу по байтам
 static std::vector<std::string> utf8_chars(const std::string& s) {
     std::vector<std::string> out;
@@ -71,6 +74,7 @@ using namespace std;
 static const char* COL_DM  = "\033[32m"; // зелёный
 static const char* COL_SYS = "\033[36m"; // циан
 static const char* COL_FAV = "\033[33m"; // жёлтый
+static const char* COL_ORANGE = "\033[38;5;214m"; // оранжевый
 static const char* COL_RST = "\033[0m";
 
 int main(int argc, char** argv) {
@@ -113,8 +117,12 @@ int main(int argc, char** argv) {
                     }
                 }
 
-                // подсветка типов
-                if (line.rfind("DM:", 0) == 0) {
+                // подсветка типов с поддержкой оранжевого цвета
+                if (line.rfind("ORANGE:", 0) == 0) {
+                    // Убираем префикс ORANGE: для отображения
+                    std::string display_line = line.substr(7);
+                    cout << COL_ORANGE << display_line << COL_RST << "\n";
+                } else if (line.rfind("DM:", 0) == 0) {
                     cout << COL_DM << line << COL_RST << "\n";
                 } else if (line.rfind("SYS:", 0) == 0) {
                     cout << COL_SYS << line << COL_RST << "\n";
@@ -123,7 +131,6 @@ int main(int argc, char** argv) {
                 } else {
                     cout << line << "\n";
                 }
-
             }
         });
 

@@ -1,3 +1,4 @@
+/Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/build/CMakeFiles/chat_core.dir
 /Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/build/CMakeFiles/server.dir
 /Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/build/CMakeFiles/client.dir
 /Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/build/CMakeFiles/server_web.dir
