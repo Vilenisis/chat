@@ -181,6 +181,10 @@ __declspec(dllexport) bool should_color_message(const std::string& username) {
       <span id="status" class="status">Готов к загрузке</span>
     </div>
 
+    <div class="status" id="dllInfo">
+      Активная библиотека: нет данных. Порт веб-загрузки: 80, чат слушает порт 8080 (открывайте два терминальных клиента для проверки изменений).
+    </div>
+
     <div class="file-list">
       <h3>Загруженные файлы:</h3>
       <div id="fileList">
@@ -195,6 +199,7 @@ const dllFileInput = document.getElementById('dllFile');
 const loadBtn = document.getElementById('loadBtn');
 const statusEl = document.getElementById('status');
 const fileListEl = document.getElementById('fileList');
+const dllInfoEl = document.getElementById('dllInfo');
 
 dllFileInput.addEventListener('change', async (event) => {
     const file = event.target.files[0];
@@ -250,6 +255,7 @@ async function loadDll() {
         if (response.ok) {
             setStatus('Успешно: ' + result.message);
             updateFileList();
+            updateDllStatus();
             dllFileInput.value = '';
         } else {
             setStatus('Ошибка: ' + result.error);
@@ -277,6 +283,18 @@ async function updateFileList() {
     }
 }
 
+async function updateDllStatus() {
+    try {
+        const response = await fetch('/dll_status');
+        const data = await response.json();
+        const dllName = data.active || 'нет активной библиотеки';
+        const colorState = data.orange ? 'оранжевый цвет включен' : 'оранжевый цвет отключен';
+        dllInfoEl.textContent = `Активная библиотека: ${dllName}; ${colorState}. Веб-загрузка на порту 80, чат на порту 8080.`;
+    } catch (error) {
+        dllInfoEl.textContent = 'Не удалось получить статус DLL';
+    }
+}
+
 function setStatus(text) {
     statusEl.textContent = text;
 }
@@ -285,6 +303,7 @@ loadBtn.addEventListener('click', loadDll);
 
 // Загружаем список файлов при старте
 updateFileList();
+updateDllStatus();
 </script>
 </body></html>)HTML";
 
@@ -322,6 +341,8 @@ struct SharedState {
         std::lock_guard<std::mutex> lock(dll_mutex);
         return current_dll_name;
     }
+
+    void notify_dll_event(const std::string& message);
     
     bool is_blocked(const std::string& receiver, const std::string& sender) {
         auto it = blacklist.find(receiver);
@@ -479,6 +500,14 @@ private:
     http::request<http::string_body> req_;
 };
 
+void SharedState::notify_dll_event(const std::string& message) {
+    for (auto it = online.begin(); it != online.end(); ++it) {
+        auto s = it->second.lock();
+        if (!s) continue;
+        s->send_text("SYS: " + message);
+    }
+}
+
 // Реализации SharedState
 void SharedState::broadcast_public(const std::string& from, const std::string& text) {
     try {
@@ -609,6 +638,12 @@ private:
             return;
         }
 
+        // Статус активной DLL
+        if (req_.method() == http::verb::get && req_.target() == "/dll_status") {
+            handle_dll_status();
+            return;
+        }
+
         // Главная страница админки
         if (req_.method() == http::verb::get && (req_.target() == "/" || req_.target() == "/index.html")) {
             handle_index();
@@ -704,6 +739,7 @@ private:
 
             state_->enable_orange_color(true);
             state_->set_current_dll(final_name);
+            state_->notify_dll_event("Загружена новая библиотека '" + final_name + "' (" + std::to_string(saved_entries.size()) + " файл(ов))");
 
             auto res = std::make_shared<http::response<http::string_body>>(http::status::ok, req_.version());
             res->set(http::field::server, "chat-admin");
@@ -753,7 +789,8 @@ private:
             // Активируем функционал оранжевого цвета
             state_->enable_orange_color(true);
             state_->set_current_dll(file_name);
-            
+            state_->notify_dll_event("Загружена новая библиотека '" + file_name + "' из редактора кода");
+
             // Логируем в консоль
             std::cout << "=== НОВАЯ DLL ЗАГРУЖЕНА ===" << std::endl;
             std::cout << "Файл: " << path << std::endl;
@@ -801,6 +838,21 @@ private:
         body << "]";
         res->body() = body.str();
 
+        res->prepare_payload();
+        write_response(res);
+    }
+
+    void handle_dll_status() {
+        auto res = std::make_shared<http::response<http::string_body>>(http::status::ok, req_.version());
+        res->set(http::field::server, "chat-admin");
+        res->set(http::field::content_type, "application/json");
+        res->keep_alive(false);
+
+        const auto current = state_->get_current_dll();
+        std::ostringstream body;
+        body << "{\"active\":\"" << current << "\",";
+        body << "\"orange\":" << (state_->is_orange_color_enabled() ? "true" : "false") << "}";
+        res->body() = body.str();
         res->prepare_payload();
         write_response(res);
     }
