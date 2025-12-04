@@ -446,7 +446,7 @@ public:
         }
     }
 
-    const std::string& name() const override { return name_; }
+    std::string name() const override { return name_; }
     void set_name(const std::string& new_name) override { name_ = new_name; }
 
 private:
@@ -490,10 +490,9 @@ public:
 private:
     void append_prebuffer(beast::flat_buffer& prebuffer) {
         if (!prebuffer.size()) return;
-        for (auto seq : prebuffer.data()) {
-            const char* data = static_cast<const char*>(seq.data());
-            read_buffer_.append(data, data + seq.size());
-        }
+        auto buffers = prebuffer.data();
+        const char* data = static_cast<const char*>(buffers.data());
+        read_buffer_.append(data, data + buffers.size());
         process_lines();
     }
 
@@ -1089,10 +1088,7 @@ private:
         if (buffer_.size() == 0) return true; // пустой буфер — читаем как HTTP
         std::string prefix;
         prefix.reserve(buffer_.size());
-        for (auto seq : buffer_.data()) {
-            const char* data = static_cast<const char*>(seq.data());
-            prefix.append(data, data + seq.size());
-        }
+        prefix = beast::buffers_to_string(buffer_.data());
         std::string_view sv(prefix.data(), prefix.size());
         return sv.rfind("GET ", 0) == 0 || sv.rfind("POST ", 0) == 0 ||
                sv.rfind("HEAD ", 0) == 0 || sv.rfind("PUT ", 0) == 0 ||
