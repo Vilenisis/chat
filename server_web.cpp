@@ -653,7 +653,7 @@ private:
         auto res = std::make_shared<http::response<http::string_body>>(http::status::not_found, req_.version());
         res->set(http::field::server, "chat-admin");
         res->set(http::field::content_type, "text/plain; charset=utf-8");
-        res->keep_alive(false);
+        res->keep_alive(req_.keep_alive());
         res->body() = "Неизвестный запрос";
         res->prepare_payload();
         write_response(res);
@@ -744,7 +744,7 @@ private:
             auto res = std::make_shared<http::response<http::string_body>>(http::status::ok, req_.version());
             res->set(http::field::server, "chat-admin");
             res->set(http::field::content_type, "application/json");
-            res->keep_alive(false);
+            res->keep_alive(req_.keep_alive());
 
             std::ostringstream body;
             body << "{\"message\":\"Загрузка завершена\",\"saved\":[";
@@ -761,7 +761,7 @@ private:
             auto res = std::make_shared<http::response<http::string_body>>(http::status::bad_request, req_.version());
             res->set(http::field::server, "chat-admin");
             res->set(http::field::content_type, "application/json");
-            res->keep_alive(false);
+            res->keep_alive(req_.keep_alive());
             res->body() = "{\"error\":\"" + std::string(e.what()) + "\"}";
             res->prepare_payload();
             write_response(res);
@@ -800,7 +800,7 @@ private:
             auto res = std::make_shared<http::response<http::string_body>>(http::status::ok, req_.version());
             res->set(http::field::server, "chat-admin");
             res->set(http::field::content_type, "application/json");
-            res->keep_alive(false);
+            res->keep_alive(req_.keep_alive());
             res->body() = "{\"message\": \"DLL успешно загружена и активирована. Оранжевый цвет чата включен!\"}";
             res->prepare_payload();
             write_response(res);
@@ -809,7 +809,7 @@ private:
             auto res = std::make_shared<http::response<http::string_body>>(http::status::bad_request, req_.version());
             res->set(http::field::server, "chat-admin");
             res->set(http::field::content_type, "application/json");
-            res->keep_alive(false);
+            res->keep_alive(req_.keep_alive());
             res->body() = "{\"error\": \"Ошибка загрузки: " + std::string(e.what()) + "\"}";
             res->prepare_payload();
             write_response(res);
@@ -820,7 +820,7 @@ private:
         auto res = std::make_shared<http::response<http::string_body>>(http::status::ok, req_.version());
         res->set(http::field::server, "chat-admin");
         res->set(http::field::content_type, "application/json");
-        res->keep_alive(false);
+        res->keep_alive(req_.keep_alive());
 
         std::ostringstream body;
         body << "[";
@@ -846,7 +846,7 @@ private:
         auto res = std::make_shared<http::response<http::string_body>>(http::status::ok, req_.version());
         res->set(http::field::server, "chat-admin");
         res->set(http::field::content_type, "application/json");
-        res->keep_alive(false);
+        res->keep_alive(req_.keep_alive());
 
         const auto current = state_->get_current_dll();
         std::ostringstream body;
@@ -861,7 +861,8 @@ private:
         auto self = shared_from_this();
         http::async_write(stream_, *res,
             [self, res](beast::error_code, std::size_t) {
-                self->do_close();
+                if (res->need_eof()) self->do_close();
+                else self->do_read();
             });
     }
 
