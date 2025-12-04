@@ -76,15 +76,15 @@ CMakeFiles/chat_core.dir/chat_lib.cpp.o: CMakeFiles/chat_core.dir/flags.make
 CMakeFiles/chat_core.dir/chat_lib.cpp.o: /Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/chat_lib.cpp
 CMakeFiles/chat_core.dir/chat_lib.cpp.o: CMakeFiles/chat_core.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/chat_core.dir/chat_lib.cpp.o"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/chat_core.dir/chat_lib.cpp.o -MF CMakeFiles/chat_core.dir/chat_lib.cpp.o.d -o CMakeFiles/chat_core.dir/chat_lib.cpp.o -c /Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/chat_lib.cpp
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/chat_core.dir/chat_lib.cpp.o -MF CMakeFiles/chat_core.dir/chat_lib.cpp.o.d -o CMakeFiles/chat_core.dir/chat_lib.cpp.o -c /Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/chat_lib.cpp
 
 CMakeFiles/chat_core.dir/chat_lib.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/chat_core.dir/chat_lib.cpp.i"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/chat_lib.cpp > CMakeFiles/chat_core.dir/chat_lib.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/chat_lib.cpp > CMakeFiles/chat_core.dir/chat_lib.cpp.i
 
 CMakeFiles/chat_core.dir/chat_lib.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/chat_core.dir/chat_lib.cpp.s"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/chat_lib.cpp -o CMakeFiles/chat_core.dir/chat_lib.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/chat_lib.cpp -o CMakeFiles/chat_core.dir/chat_lib.cpp.s
 
 # Object files for target chat_core
 chat_core_OBJECTS = \

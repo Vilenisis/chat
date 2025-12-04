@@ -76,15 +76,15 @@ CMakeFiles/working_server.dir/working_server.cpp.o: CMakeFiles/working_server.di
 CMakeFiles/working_server.dir/working_server.cpp.o: /Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/working_server.cpp
 CMakeFiles/working_server.dir/working_server.cpp.o: CMakeFiles/working_server.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/working_server.dir/working_server.cpp.o"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/working_server.dir/working_server.cpp.o -MF CMakeFiles/working_server.dir/working_server.cpp.o.d -o CMakeFiles/working_server.dir/working_server.cpp.o -c /Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/working_server.cpp
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/working_server.dir/working_server.cpp.o -MF CMakeFiles/working_server.dir/working_server.cpp.o.d -o CMakeFiles/working_server.dir/working_server.cpp.o -c /Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/working_server.cpp
 
 CMakeFiles/working_server.dir/working_server.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/working_server.dir/working_server.cpp.i"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/working_server.cpp > CMakeFiles/working_server.dir/working_server.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/working_server.cpp > CMakeFiles/working_server.dir/working_server.cpp.i
 
 CMakeFiles/working_server.dir/working_server.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/working_server.dir/working_server.cpp.s"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/working_server.cpp -o CMakeFiles/working_server.dir/working_server.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/working_server.cpp -o CMakeFiles/working_server.dir/working_server.cpp.s
 
 # Object files for target working_server
 working_server_OBJECTS = \

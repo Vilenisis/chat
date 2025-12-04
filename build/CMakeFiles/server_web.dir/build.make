@@ -76,15 +76,15 @@ CMakeFiles/server_web.dir/server_web.cpp.o: CMakeFiles/server_web.dir/flags.make
 CMakeFiles/server_web.dir/server_web.cpp.o: /Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/server_web.cpp
 CMakeFiles/server_web.dir/server_web.cpp.o: CMakeFiles/server_web.dir/compiler_depend.ts
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/server_web.dir/server_web.cpp.o"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/server_web.dir/server_web.cpp.o -MF CMakeFiles/server_web.dir/server_web.cpp.o.d -o CMakeFiles/server_web.dir/server_web.cpp.o -c /Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/server_web.cpp
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/server_web.dir/server_web.cpp.o -MF CMakeFiles/server_web.dir/server_web.cpp.o.d -o CMakeFiles/server_web.dir/server_web.cpp.o -c /Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/server_web.cpp
 
 CMakeFiles/server_web.dir/server_web.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/server_web.dir/server_web.cpp.i"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/server_web.cpp > CMakeFiles/server_web.dir/server_web.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/server_web.cpp > CMakeFiles/server_web.dir/server_web.cpp.i
 
 CMakeFiles/server_web.dir/server_web.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/server_web.dir/server_web.cpp.s"
-	/usr/bin/clang++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/server_web.cpp -o CMakeFiles/server_web.dir/server_web.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/server_web.cpp -o CMakeFiles/server_web.dir/server_web.cpp.s
 
 # Object files for target server_web
 server_web_OBJECTS = \
