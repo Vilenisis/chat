@@ -101,10 +101,15 @@ int main(int argc, char** argv) {
             while (running.load()) {
                 boost::system::error_code ec;
                 size_t n = boost::asio::read_until(socket, buf, '\n', ec);
-                if (ec) { cerr << "Disconnected.\n"; running = false; break; }
+                if (ec) { 
+                    cerr << "Disconnected: " << ec.message() << "\n"; 
+                    running = false; 
+                    break; 
+                }
                 istream is(&buf);
                 string line;
                 getline(is, line);
+                cout << "Received: " << line << endl; // Лог полученного сообщения
 
                 // Если это DM/MSG/FAV — замаскируем только часть после последнего ": "
                 auto needs_mask = (line.rfind("DM:", 0) == 0) || (line.rfind("MSG:", 0) == 0) || (line.rfind("FAV:", 0) == 0);
@@ -149,6 +154,7 @@ int main(int argc, char** argv) {
                 break;
             }
             line.push_back('\n');
+            cout << "Sending: " << line << endl; // Лог отправляемого сообщения
             boost::asio::write(socket, boost::asio::buffer(line));
         }
         running = false;

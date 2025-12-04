@@ -1,0 +1,4 @@
+Connected to localhost:8080
+Sending: #me Vilen
+
+Disconnected: End of file

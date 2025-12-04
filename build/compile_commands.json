@@ -22,5 +22,11 @@
   "command": "/usr/bin/clang++  -isystem /opt/homebrew/include -g -std=gnu++20 -arch arm64 -o CMakeFiles/server_web.dir/server_web.cpp.o -c /Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/server_web.cpp",
   "file": "/Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/server_web.cpp",
   "output": "CMakeFiles/server_web.dir/server_web.cpp.o"
+},
+{
+  "directory": "/Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/build",
+  "command": "/usr/bin/clang++  -isystem /opt/homebrew/include -g -std=gnu++20 -arch arm64 -o CMakeFiles/working_server.dir/working_server.cpp.o -c /Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/working_server.cpp",
+  "file": "/Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/working_server.cpp",
+  "output": "CMakeFiles/working_server.dir/working_server.cpp.o"
 }
 ]

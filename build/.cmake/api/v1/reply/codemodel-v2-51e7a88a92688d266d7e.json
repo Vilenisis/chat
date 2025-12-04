@@ -1,0 +1,96 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"jsonFile" : "directory-.-Debug-f5ebdc15457944623624.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.16"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "chat_cpp_asio",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3,
+						4
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "chat_core::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-chat_core-Debug-e408bd52f67981d9ac16.json",
+					"name" : "chat_core",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "client::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-client-Debug-a60bd329b162e9443d0e.json",
+					"name" : "client",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "server::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-server-Debug-30634ccfe6f115c1571b.json",
+					"name" : "server",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "server_web::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-server_web-Debug-0be7cc33ed9d79ae4a43.json",
+					"name" : "server_web",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "working_server::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-working_server-Debug-191c3e5e4ff3216d252e.json",
+					"name" : "working_server",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/Users/vilenislamov/Desktop/\u043f\u0440\u043e\u0435\u043a\u0442\u044b/CrossPlatform/chat/build",
+		"source" : "/Users/vilenislamov/Desktop/\u043f\u0440\u043e\u0435\u043a\u0442\u044b/CrossPlatform/chat"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 8
+	}
+}

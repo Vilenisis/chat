@@ -224,28 +224,11 @@ public:
     }
 
     void on_accept(beast::error_code ec) {
-        if (ec) return;
-        
-        try {
-            boost::system::error_code ec2;
-            auto ep = ws_.next_layer().remote_endpoint(ec2);
-            if (!ec2) {
-                ip_ = ep.address().to_string();
-            }
-            auto it = state_->last_name_by_ip.find(ip_);
-            if (it != state_->last_name_by_ip.end()) {
-                send_text("SYS: Обнаружен прежний IP. Использовать прежнее имя \"" + it->second + "\"? Команда: #me " + it->second);
-            } else {
-                send_text("SYS: Введите имя: #me <name>");
-            }
-            
-            // Уведомление о активных DLL
-            if (state_->is_orange_color_enabled()) {
-                send_text("SYS: Активна DLL: " + state_->get_current_dll() + " - оранжевый цвет чата включен!");
-            }
-        } catch (...) {
-            send_text("SYS: Введите имя: #me <name>");
+        if (ec) {
+            std::cerr << "WebSocket accept error: " << ec.message() << std::endl;
+            return;
         }
+        std::cout << "WebSocket connection accepted" << std::endl;
         do_read();
     }
 
@@ -254,8 +237,13 @@ public:
     }
 
     void on_read(beast::error_code ec, std::size_t) {
-        if (ec) { on_close(); return; }
+        if (ec) {
+            std::cerr << "WebSocket read error: " << ec.message() << std::endl;
+            on_close();
+            return;
+        }
         std::string line = beast::buffers_to_string(buffer_.data());
+        std::cout << "Received message: " << line << std::endl;
         buffer_.consume(buffer_.size());
         handle_line(line);
         do_read();
@@ -310,83 +298,49 @@ private:
     }
 
     void handle_line(std::string line) {
-        while (!line.empty() && (line.back()=='\n' || line.back()=='\r')) line.pop_back();
+        std::cout << "Handling line: " << line << std::endl;
+        while (!line.empty() && (line.back() == '\n' || line.back() == '\r')) line.pop_back();
 
-        // Обработка команды #dll_status
-        if (line == "#dll_status") {
-            if (state_->is_orange_color_enabled()) {
-                send_text("SYS: Активна DLL: " + state_->get_current_dll() + " - оранжевый цвет чата");
-            } else {
-                send_text("SYS: Нет активных DLL модификаций");
-            }
-            return;
-        }
-
-        // Остальная обработка команд (как раньше)
-        if (line.rfind("#me", 0) == 0) {
-            std::string newname = trim_after(line, "#me");
-            if (newname.empty()) { send_text("SYS: формат: #me <name>"); return; }
-            auto it = state_->online.find(newname);
-            if (it != state_->online.end() && !it->second.expired() && it->second.lock().get() != this) {
-                send_text("SYS: имя занято");
+        try {
+            if (line == "#help") {
+                send_text("SYS: Команды: #help, #who, #me <name>, #block <user>, #unblock <user>, #fav <user>, #unfav <user>, #massdm <text>, #dll_status");
+                send_text("SYS: ЛС: @user <text>");
                 return;
             }
-            if (!name_.empty()) state_->online.erase(name_);
-            name_ = newname;
-            state_->online[name_] = weak_from_this();
-            if (!ip_.empty()) state_->last_name_by_ip[ip_] = name_;
-            send_text("SYS: имя установлено: " + name_);
-            state_->deliver_offline_if_any(shared_from_this());
-            return;
-        }
 
-        if (name_.empty()) { send_text("SYS: сначала укажите имя: #me <name>"); return; }
-
-        if (line == "#help") {
-            send_text("SYS: Команды: #help, #who, #me <name>, #block <user>, #unblock <user>, #fav <user>, #unfav <user>, #massdm <text>, #dll_status");
-            send_text("SYS: ЛС: @user <text>");
-            return;
-        }
-
-        // ... остальные команды (who, block, unblock, fav, unfav, massdm, @user) остаются без изменений
-        if (line == "#who") {
-            std::string out = "SYS: Online: ";
-            bool first=true;
-            for (auto& [n, w] : state_->online) {
-                if (w.expired()) continue;
-                if (!first) out += ", ";
-                out += n; first=false;
-            }
-            send_text(out);
-            return;
-        }
-
-        if (line.rfind("@", 0) == 0) {
-            auto sp = line.find(' ');
-            std::string to = (sp == std::string::npos) ? line.substr(1) : line.substr(1, sp-1);
-            std::string text = (sp == std::string::npos) ? "" : line.substr(sp+1);
-            if (to.empty() || text.empty()) { send_text("SYS: формат ЛС: @user <text>"); return; }
-
-            if (auto it = state_->online.find(to); it != state_->online.end()) {
-                if (auto recip = it->second.lock()) {
-                    if (!state_->is_blocked(recip->name(), name_)) {
-                        recip->send_text("DM: от " + name_ + ": " + text);
-                    }
+            if (line.rfind("#me", 0) == 0) {
+                std::string newname = trim_after(line, "#me");
+                if (newname.empty()) {
+                    send_text("SYS: Укажите имя после команды #me");
                     return;
                 }
+                auto it = state_->online.find(newname);
+                if (it != state_->online.end() && !it->second.expired() && it->second.lock().get() != this) {
+                    send_text("SYS: Имя уже занято");
+                    return;
+                }
+                if (!name_.empty()) {
+                    state_->online.erase(name_);
+                }
+                name_ = newname;
+                state_->online[name_] = weak_from_this();
+                send_text("SYS: Имя установлено: " + name_);
+                state_->deliver_offline_if_any(shared_from_this());
+                return;
             }
-            auto& box = state_->offline_inbox[to];
-            if (box.size() >= 10) {
-                send_text("SYS: ящик пользователя переполнен");
-            } else {
-                box.emplace_back(name_, text);
-                send_text("SYS: сообщение сохранено в офлайн-ящике для " + to);
-            }
-            return;
-        }
 
-        // Обычное сообщение всем
-        state_->broadcast_public(name_, line);
+            if (name_.empty()) {
+                send_text("SYS: Сначала укажите имя: #me <name>");
+                return;
+            }
+
+            // Обработка других команд...
+            state_->broadcast_public(name_, line);
+
+        } catch (const std::exception& e) {
+            std::cerr << "Error in handle_line: " << e.what() << std::endl;
+            send_text("SYS: Произошла ошибка при обработке команды");
+        }
     }
 
 private:
@@ -402,14 +356,18 @@ private:
 
 // Реализации SharedState
 void SharedState::broadcast_public(const std::string& from, const std::string& text) {
-    for (auto it = online.begin(); it != online.end(); ++it) {
-        const std::string& name = it->first;
-        auto s = it->second.lock();
-        if (!s) continue;
-        if (is_blocked(name, from)) continue;
-        bool fav = favorites[name].count(from);
-        std::string payload = (fav ? "FAV: " : "MSG: ") + from + ": " + text;
-        s->send_text(payload);
+    try {
+        for (auto it = online.begin(); it != online.end(); ++it) {
+            const std::string& name = it->first;
+            auto s = it->second.lock();
+            if (!s) continue;
+            if (is_blocked(name, from)) continue;
+            bool fav = favorites[name].count(from);
+            std::string payload = (fav ? "FAV: " : "MSG: ") + from + ": " + text;
+            s->send_text(payload);
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Error in broadcast_public: " << e.what() << std::endl;
     }
 }
 
@@ -458,13 +416,17 @@ private:
         res->keep_alive(req_.keep_alive());
         
         // Простая чат-страница
-        res->body() = R"HTML(<!doctype html>
-<html><head><title>Chat</title></head>
-<body>
-<h1>Web Chat</h1>
-<p>Используйте клиентское приложение для доступа к чату</p>
-<p>Текущие DLL модификации: )HTML" + (state_->is_orange_color_enabled() ? "Оранжевый цвет активен" : "Нет") + R"HTML(</p>
-</body></html>)HTML";
+        std::string status_html = R"HTML(<!doctype html>
+        <html><head><title>Chat</title></head>
+        <body>
+        <h1>Web Chat</h1>
+        <p>Используйте клиентское приложение для доступа к чату</p>
+        <p>Текущие DLL модификации: )HTML";
+        status_html += (state_->is_orange_color_enabled() ? "Оранжевый цвет активен" : "Нет");
+        status_html += R"HTML(</p>
+        </body></html>)HTML";
+
+        res->body() = status_html;
         
         res->prepare_payload();
         auto self = shared_from_this();

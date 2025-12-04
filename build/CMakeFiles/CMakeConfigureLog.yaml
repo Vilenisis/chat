@@ -20,6 +20,7 @@ events:
     names:
       - "uname"
     candidate_directories:
+      - "/opt/homebrew/opt/openjdk@17/bin/"
       - "/opt/homebrew/opt/libpq/bin/"
       - "/opt/homebrew/bin/"
       - "/opt/homebrew/sbin/"
@@ -36,6 +37,7 @@ events:
       - "/usr/local/share/dotnet/"
       - "/Users/vilenislamov/.dotnet/tools/"
     searched_directories:
+      - "/opt/homebrew/opt/openjdk@17/bin/uname"
       - "/opt/homebrew/opt/libpq/bin/uname"
       - "/opt/homebrew/bin/uname"
       - "/opt/homebrew/sbin/uname"
@@ -45,6 +47,7 @@ events:
     found: "/usr/bin/uname"
     search_context:
       ENV{PATH}:
+        - "/opt/homebrew/opt/openjdk@17/bin"
         - "/opt/homebrew/opt/libpq/bin"
         - "/opt/homebrew/bin"
         - "/opt/homebrew/sbin"
@@ -66,7 +69,7 @@ events:
       - "/opt/homebrew/share/cmake/Modules/CMakeDetermineSystem.cmake:212 (message)"
       - "CMakeLists.txt:2 (project)"
     message: |
-      The system is: Darwin - 24.4.0 - arm64
+      The system is: Darwin - 24.6.0 - arm64
   -
     kind: "find-v1"
     backtrace:
@@ -88,6 +91,7 @@ events:
       - "make"
       - "smake"
     candidate_directories:
+      - "/opt/homebrew/opt/openjdk@17/bin/"
       - "/opt/homebrew/opt/libpq/bin/"
       - "/opt/homebrew/bin/"
       - "/opt/homebrew/sbin/"
@@ -104,6 +108,7 @@ events:
       - "/usr/local/share/dotnet/"
       - "/Users/vilenislamov/.dotnet/tools/"
     searched_directories:
+      - "/opt/homebrew/opt/openjdk@17/bin/gmake"
       - "/opt/homebrew/opt/libpq/bin/gmake"
       - "/opt/homebrew/bin/gmake"
       - "/opt/homebrew/sbin/gmake"
@@ -119,6 +124,7 @@ events:
       - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin/gmake"
       - "/usr/local/share/dotnet/gmake"
       - "/Users/vilenislamov/.dotnet/tools/gmake"
+      - "/opt/homebrew/opt/openjdk@17/bin/make"
       - "/opt/homebrew/opt/libpq/bin/make"
       - "/opt/homebrew/bin/make"
       - "/opt/homebrew/sbin/make"
@@ -128,6 +134,7 @@ events:
     found: "/usr/bin/make"
     search_context:
       ENV{PATH}:
+        - "/opt/homebrew/opt/openjdk@17/bin"
         - "/opt/homebrew/opt/libpq/bin"
         - "/opt/homebrew/bin"
         - "/opt/homebrew/sbin"
@@ -170,6 +177,7 @@ events:
     found: "/opt/homebrew/share/cmake/Modules/CMakeCXXCompilerId.cpp.in"
     search_context:
       ENV{PATH}:
+        - "/opt/homebrew/opt/openjdk@17/bin"
         - "/opt/homebrew/opt/libpq/bin"
         - "/opt/homebrew/bin"
         - "/opt/homebrew/sbin"
@@ -269,6 +277,7 @@ events:
       - "ar"
     candidate_directories:
       - "/usr/bin/"
+      - "/opt/homebrew/opt/openjdk@17/bin/"
       - "/opt/homebrew/opt/libpq/bin/"
       - "/opt/homebrew/bin/"
       - "/opt/homebrew/sbin/"
@@ -286,6 +295,7 @@ events:
     found: "/usr/bin/ar"
     search_context:
       ENV{PATH}:
+        - "/opt/homebrew/opt/openjdk@17/bin"
         - "/opt/homebrew/opt/libpq/bin"
         - "/opt/homebrew/bin"
         - "/opt/homebrew/sbin"
@@ -322,6 +332,7 @@ events:
       - "ranlib"
     candidate_directories:
       - "/usr/bin/"
+      - "/opt/homebrew/opt/openjdk@17/bin/"
       - "/opt/homebrew/opt/libpq/bin/"
       - "/opt/homebrew/bin/"
       - "/opt/homebrew/sbin/"
@@ -339,6 +350,7 @@ events:
     found: "/usr/bin/ranlib"
     search_context:
       ENV{PATH}:
+        - "/opt/homebrew/opt/openjdk@17/bin"
         - "/opt/homebrew/opt/libpq/bin"
         - "/opt/homebrew/bin"
         - "/opt/homebrew/sbin"
@@ -375,6 +387,7 @@ events:
       - "strip"
     candidate_directories:
       - "/usr/bin/"
+      - "/opt/homebrew/opt/openjdk@17/bin/"
       - "/opt/homebrew/opt/libpq/bin/"
       - "/opt/homebrew/bin/"
       - "/opt/homebrew/sbin/"
@@ -392,6 +405,7 @@ events:
     found: "/usr/bin/strip"
     search_context:
       ENV{PATH}:
+        - "/opt/homebrew/opt/openjdk@17/bin"
         - "/opt/homebrew/opt/libpq/bin"
         - "/opt/homebrew/bin"
         - "/opt/homebrew/sbin"
@@ -428,6 +442,7 @@ events:
       - "ld"
     candidate_directories:
       - "/usr/bin/"
+      - "/opt/homebrew/opt/openjdk@17/bin/"
       - "/opt/homebrew/opt/libpq/bin/"
       - "/opt/homebrew/bin/"
       - "/opt/homebrew/sbin/"
@@ -445,6 +460,7 @@ events:
     found: "/usr/bin/ld"
     search_context:
       ENV{PATH}:
+        - "/opt/homebrew/opt/openjdk@17/bin"
         - "/opt/homebrew/opt/libpq/bin"
         - "/opt/homebrew/bin"
         - "/opt/homebrew/sbin"
@@ -481,6 +497,7 @@ events:
       - "nm"
     candidate_directories:
       - "/usr/bin/"
+      - "/opt/homebrew/opt/openjdk@17/bin/"
       - "/opt/homebrew/opt/libpq/bin/"
       - "/opt/homebrew/bin/"
       - "/opt/homebrew/sbin/"
@@ -498,6 +515,7 @@ events:
     found: "/usr/bin/nm"
     search_context:
       ENV{PATH}:
+        - "/opt/homebrew/opt/openjdk@17/bin"
         - "/opt/homebrew/opt/libpq/bin"
         - "/opt/homebrew/bin"
         - "/opt/homebrew/sbin"
@@ -534,6 +552,7 @@ events:
       - "objdump"
     candidate_directories:
       - "/usr/bin/"
+      - "/opt/homebrew/opt/openjdk@17/bin/"
       - "/opt/homebrew/opt/libpq/bin/"
       - "/opt/homebrew/bin/"
       - "/opt/homebrew/sbin/"
@@ -551,6 +570,7 @@ events:
     found: "/usr/bin/objdump"
     search_context:
       ENV{PATH}:
+        - "/opt/homebrew/opt/openjdk@17/bin"
         - "/opt/homebrew/opt/libpq/bin"
         - "/opt/homebrew/bin"
         - "/opt/homebrew/sbin"
@@ -587,6 +607,7 @@ events:
       - "objcopy"
     candidate_directories:
       - "/usr/bin/"
+      - "/opt/homebrew/opt/openjdk@17/bin/"
       - "/opt/homebrew/opt/libpq/bin/"
       - "/opt/homebrew/bin/"
       - "/opt/homebrew/sbin/"
@@ -603,6 +624,7 @@ events:
       - "/Users/vilenislamov/.dotnet/tools/"
     searched_directories:
       - "/usr/bin/objcopy"
+      - "/opt/homebrew/opt/openjdk@17/bin/objcopy"
       - "/opt/homebrew/opt/libpq/bin/objcopy"
       - "/opt/homebrew/bin/objcopy"
       - "/opt/homebrew/sbin/objcopy"
@@ -620,6 +642,7 @@ events:
     found: false
     search_context:
       ENV{PATH}:
+        - "/opt/homebrew/opt/openjdk@17/bin"
         - "/opt/homebrew/opt/libpq/bin"
         - "/opt/homebrew/bin"
         - "/opt/homebrew/sbin"
@@ -656,6 +679,7 @@ events:
       - "readelf"
     candidate_directories:
       - "/usr/bin/"
+      - "/opt/homebrew/opt/openjdk@17/bin/"
       - "/opt/homebrew/opt/libpq/bin/"
       - "/opt/homebrew/bin/"
       - "/opt/homebrew/sbin/"
@@ -672,6 +696,7 @@ events:
       - "/Users/vilenislamov/.dotnet/tools/"
     searched_directories:
       - "/usr/bin/readelf"
+      - "/opt/homebrew/opt/openjdk@17/bin/readelf"
       - "/opt/homebrew/opt/libpq/bin/readelf"
       - "/opt/homebrew/bin/readelf"
       - "/opt/homebrew/sbin/readelf"
@@ -689,6 +714,7 @@ events:
     found: false
     search_context:
       ENV{PATH}:
+        - "/opt/homebrew/opt/openjdk@17/bin"
         - "/opt/homebrew/opt/libpq/bin"
         - "/opt/homebrew/bin"
         - "/opt/homebrew/sbin"
@@ -725,6 +751,7 @@ events:
       - "dlltool"
     candidate_directories:
       - "/usr/bin/"
+      - "/opt/homebrew/opt/openjdk@17/bin/"
       - "/opt/homebrew/opt/libpq/bin/"
       - "/opt/homebrew/bin/"
       - "/opt/homebrew/sbin/"
@@ -741,6 +768,7 @@ events:
       - "/Users/vilenislamov/.dotnet/tools/"
     searched_directories:
       - "/usr/bin/dlltool"
+      - "/opt/homebrew/opt/openjdk@17/bin/dlltool"
       - "/opt/homebrew/opt/libpq/bin/dlltool"
       - "/opt/homebrew/bin/dlltool"
       - "/opt/homebrew/sbin/dlltool"
@@ -758,6 +786,7 @@ events:
     found: false
     search_context:
       ENV{PATH}:
+        - "/opt/homebrew/opt/openjdk@17/bin"
         - "/opt/homebrew/opt/libpq/bin"
         - "/opt/homebrew/bin"
         - "/opt/homebrew/sbin"
@@ -794,6 +823,7 @@ events:
       - "addr2line"
     candidate_directories:
       - "/usr/bin/"
+      - "/opt/homebrew/opt/openjdk@17/bin/"
       - "/opt/homebrew/opt/libpq/bin/"
       - "/opt/homebrew/bin/"
       - "/opt/homebrew/sbin/"
@@ -810,6 +840,7 @@ events:
       - "/Users/vilenislamov/.dotnet/tools/"
     searched_directories:
       - "/usr/bin/addr2line"
+      - "/opt/homebrew/opt/openjdk@17/bin/addr2line"
       - "/opt/homebrew/opt/libpq/bin/addr2line"
       - "/opt/homebrew/bin/addr2line"
       - "/opt/homebrew/sbin/addr2line"
@@ -827,6 +858,7 @@ events:
     found: false
     search_context:
       ENV{PATH}:
+        - "/opt/homebrew/opt/openjdk@17/bin"
         - "/opt/homebrew/opt/libpq/bin"
         - "/opt/homebrew/bin"
         - "/opt/homebrew/sbin"
@@ -863,6 +895,7 @@ events:
       - "tapi"
     candidate_directories:
       - "/usr/bin/"
+      - "/opt/homebrew/opt/openjdk@17/bin/"
       - "/opt/homebrew/opt/libpq/bin/"
       - "/opt/homebrew/bin/"
       - "/opt/homebrew/sbin/"
@@ -879,6 +912,7 @@ events:
       - "/Users/vilenislamov/.dotnet/tools/"
     searched_directories:
       - "/usr/bin/tapi"
+      - "/opt/homebrew/opt/openjdk@17/bin/tapi"
       - "/opt/homebrew/opt/libpq/bin/tapi"
       - "/opt/homebrew/bin/tapi"
       - "/opt/homebrew/sbin/tapi"
@@ -896,6 +930,7 @@ events:
     found: false
     search_context:
       ENV{PATH}:
+        - "/opt/homebrew/opt/openjdk@17/bin"
         - "/opt/homebrew/opt/libpq/bin"
         - "/opt/homebrew/bin"
         - "/opt/homebrew/sbin"
@@ -931,6 +966,7 @@ events:
     names:
       - "install_name_tool"
     candidate_directories:
+      - "/opt/homebrew/opt/openjdk@17/bin/"
       - "/opt/homebrew/opt/libpq/bin/"
       - "/opt/homebrew/bin/"
       - "/opt/homebrew/sbin/"
@@ -947,6 +983,7 @@ events:
       - "/usr/local/share/dotnet/"
       - "/Users/vilenislamov/.dotnet/tools/"
     searched_directories:
+      - "/opt/homebrew/opt/openjdk@17/bin/install_name_tool"
       - "/opt/homebrew/opt/libpq/bin/install_name_tool"
       - "/opt/homebrew/bin/install_name_tool"
       - "/opt/homebrew/sbin/install_name_tool"
@@ -956,6 +993,7 @@ events:
     found: "/usr/bin/install_name_tool"
     search_context:
       ENV{PATH}:
+        - "/opt/homebrew/opt/openjdk@17/bin"
         - "/opt/homebrew/opt/libpq/bin"
         - "/opt/homebrew/bin"
         - "/opt/homebrew/sbin"
@@ -981,8 +1019,8 @@ events:
     checks:
       - "Detecting CXX compiler ABI info"
     directories:
-      source: "/Users/vilenislamov/Desktop/\u043f\u0440\u043e\u0435\u043a\u0442\u044b/CrossPlatform/chat/build/CMakeFiles/CMakeScratch/TryCompile-ngC5n0"
-      binary: "/Users/vilenislamov/Desktop/\u043f\u0440\u043e\u0435\u043a\u0442\u044b/CrossPlatform/chat/build/CMakeFiles/CMakeScratch/TryCompile-ngC5n0"
+      source: "/Users/vilenislamov/Desktop/\u043f\u0440\u043e\u0435\u043a\u0442\u044b/CrossPlatform/chat/build/CMakeFiles/CMakeScratch/TryCompile-yrmCUx"
+      binary: "/Users/vilenislamov/Desktop/\u043f\u0440\u043e\u0435\u043a\u0442\u044b/CrossPlatform/chat/build/CMakeFiles/CMakeScratch/TryCompile-yrmCUx"
     cmakeVariables:
       CMAKE_CXX_FLAGS: ""
       CMAKE_CXX_FLAGS_DEBUG: "-g"
@@ -995,20 +1033,20 @@ events:
       variable: "CMAKE_CXX_ABI_COMPILED"
       cached: true
       stdout: |
-        Change Dir: '/Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/build/CMakeFiles/CMakeScratch/TryCompile-ngC5n0'
+        Change Dir: '/Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/build/CMakeFiles/CMakeScratch/TryCompile-yrmCUx'
         
-        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_430ac/fast
-        /Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/cmTC_430ac.dir/build.make CMakeFiles/cmTC_430ac.dir/build
-        Building CXX object CMakeFiles/cmTC_430ac.dir/CMakeCXXCompilerABI.cpp.o
-        /usr/bin/clang++   -arch arm64   -v -Wl,-v -MD -MT CMakeFiles/cmTC_430ac.dir/CMakeCXXCompilerABI.cpp.o -MF CMakeFiles/cmTC_430ac.dir/CMakeCXXCompilerABI.cpp.o.d -o CMakeFiles/cmTC_430ac.dir/CMakeCXXCompilerABI.cpp.o -c /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp
-        Apple clang version 17.0.0 (clang-1700.0.13.3)
-        Target: arm64-apple-darwin24.4.0
+        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_9515e/fast
+        /Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/cmTC_9515e.dir/build.make CMakeFiles/cmTC_9515e.dir/build
+        Building CXX object CMakeFiles/cmTC_9515e.dir/CMakeCXXCompilerABI.cpp.o
+        /usr/bin/clang++   -arch arm64   -v -Wl,-v -MD -MT CMakeFiles/cmTC_9515e.dir/CMakeCXXCompilerABI.cpp.o -MF CMakeFiles/cmTC_9515e.dir/CMakeCXXCompilerABI.cpp.o.d -o CMakeFiles/cmTC_9515e.dir/CMakeCXXCompilerABI.cpp.o -c /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp
+        Apple clang version 17.0.0 (clang-1700.0.13.5)
+        Target: arm64-apple-darwin24.6.0
         Thread model: posix
         InstalledDir: /Library/Developer/CommandLineTools/usr/bin
         clang++: warning: -Wl,-v: 'linker' input unused [-Wunused-command-line-argument]
         ignoring nonexistent directory "/Library/Developer/CommandLineTools/usr/bin/../include/c++/v1"
-         "/Library/Developer/CommandLineTools/usr/bin/clang" -cc1 -triple arm64-apple-macosx15.0.0 -Wundef-prefix=TARGET_OS_ -Wdeprecated-objc-isa-usage -Werror=deprecated-objc-isa-usage -Werror=implicit-function-declaration -emit-obj -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model pic -pic-level 2 -mframe-pointer=non-leaf -fno-strict-return -ffp-contract=on -fno-rounding-math -funwind-tables=1 -fobjc-msgsend-selector-stubs -target-sdk-version=15.4 -fvisibility-inlines-hidden-static-local-var -fdefine-target-os-macros -fno-assume-unique-vtables -fno-modulemap-allow-subdirectory-search -target-cpu apple-m1 -target-feature +zcm -target-feature +zcz -target-feature +v8.5a -target-feature +aes -target-feature +altnzcv -target-feature +ccdp -target-feature +complxnum -target-feature +crc -target-feature +dotprod -target-feature +fp-armv8 -target-feature +fp16fml -target-feature +fptoint -target-feature +fullfp16 -target-feature +jsconv -target-feature +lse -target-feature +neon -target-feature +pauth -target-feature +perfmon -target-feature +predres -target-feature +ras -target-feature +rcpc -target-feature +rdm -target-feature +sb -target-feature +sha2 -target-feature +sha3 -target-feature +specrestrict -target-feature +ssbs -target-abi darwinpcs -debugger-tuning=lldb -fdebug-compilation-dir=/Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/build/CMakeFiles/CMakeScratch/TryCompile-ngC5n0 -target-linker-version 1167.4.1 -v -fcoverage-compilation-dir=/Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/build/CMakeFiles/CMakeScratch/TryCompile-ngC5n0 -resource-dir /Library/Developer/CommandLineTools/usr/lib/clang/17 -dependency-file CMakeFiles/cmTC_430ac.dir/CMakeCXXCompilerABI.cpp.o.d -skip-unused-modulemap-deps -MT CMakeFiles/cmTC_430ac.dir/CMakeCXXCompilerABI.cpp.o -sys-header-deps -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -I/usr/local/include -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1 -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/local/include -internal-isystem /Library/Developer/CommandLineTools/usr/lib/clang/17/include -internal-externc-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -internal-externc-isystem /Library/Developer/CommandLineTools/usr/include -Wno-reorder-init-list -Wno-implicit-int-float-conversion -Wno-c99-designator -Wno-final-dtor-non-final-class -Wno-extra-semi-stmt -Wno-misleading-indentation -Wno-quoted-include-in-framework-header -Wno-implicit-fallthrough -Wno-enum-enum-conversion -Wno-enum-float-conversion -Wno-elaborated-enum-base -Wno-reserved-identifier -Wno-gnu-folding-constant -fdeprecated-macro -ferror-limit 19 -stack-protector 1 -fstack-check -mdarwin-stkchk-strong-link -fblocks -fencode-extended-block-signature -fregister-global-dtors-with-atexit -fgnuc-version=4.2.1 -fno-cxx-modules -fskip-odr-check-in-gmf -fcxx-exceptions -fexceptions -fmax-type-align=16 -fcommon -clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation -fno-odr-hash-protocols -clang-vendor-feature=+enableAggressiveVLAFolding -clang-vendor-feature=+revert09abecef7bbf -clang-vendor-feature=+thisNoAlignAttr -clang-vendor-feature=+thisNoNullAttr -clang-vendor-feature=+disableAtImportPrivateFrameworkInImplementationError -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_430ac.dir/CMakeCXXCompilerABI.cpp.o -x c++ /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp
-        clang -cc1 version 17.0.0 (clang-1700.0.13.3) default target arm64-apple-darwin24.4.0
+         "/Library/Developer/CommandLineTools/usr/bin/clang" -cc1 -triple arm64-apple-macosx15.0.0 -Wundef-prefix=TARGET_OS_ -Wdeprecated-objc-isa-usage -Werror=deprecated-objc-isa-usage -Werror=implicit-function-declaration -emit-obj -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model pic -pic-level 2 -mframe-pointer=non-leaf -fno-strict-return -ffp-contract=on -fno-rounding-math -funwind-tables=1 -fobjc-msgsend-selector-stubs -target-sdk-version=15.5 -fvisibility-inlines-hidden-static-local-var -fdefine-target-os-macros -fno-assume-unique-vtables -fno-modulemap-allow-subdirectory-search -target-cpu apple-m1 -target-feature +zcm -target-feature +zcz -target-feature +v8.5a -target-feature +aes -target-feature +altnzcv -target-feature +ccdp -target-feature +complxnum -target-feature +crc -target-feature +dotprod -target-feature +fp-armv8 -target-feature +fp16fml -target-feature +fptoint -target-feature +fullfp16 -target-feature +jsconv -target-feature +lse -target-feature +neon -target-feature +pauth -target-feature +perfmon -target-feature +predres -target-feature +ras -target-feature +rcpc -target-feature +rdm -target-feature +sb -target-feature +sha2 -target-feature +sha3 -target-feature +specrestrict -target-feature +ssbs -target-abi darwinpcs -debugger-tuning=lldb -fdebug-compilation-dir=/Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/build/CMakeFiles/CMakeScratch/TryCompile-yrmCUx -target-linker-version 1167.5 -v -fcoverage-compilation-dir=/Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/build/CMakeFiles/CMakeScratch/TryCompile-yrmCUx -resource-dir /Library/Developer/CommandLineTools/usr/lib/clang/17 -dependency-file CMakeFiles/cmTC_9515e.dir/CMakeCXXCompilerABI.cpp.o.d -skip-unused-modulemap-deps -MT CMakeFiles/cmTC_9515e.dir/CMakeCXXCompilerABI.cpp.o -sys-header-deps -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -I/usr/local/include -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1 -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/local/include -internal-isystem /Library/Developer/CommandLineTools/usr/lib/clang/17/include -internal-externc-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -internal-externc-isystem /Library/Developer/CommandLineTools/usr/include -Wno-reorder-init-list -Wno-implicit-int-float-conversion -Wno-c99-designator -Wno-final-dtor-non-final-class -Wno-extra-semi-stmt -Wno-misleading-indentation -Wno-quoted-include-in-framework-header -Wno-implicit-fallthrough -Wno-enum-enum-conversion -Wno-enum-float-conversion -Wno-elaborated-enum-base -Wno-reserved-identifier -Wno-gnu-folding-constant -fdeprecated-macro -ferror-limit 19 -stack-protector 1 -fstack-check -mdarwin-stkchk-strong-link -fblocks -fencode-extended-block-signature -fregister-global-dtors-with-atexit -fgnuc-version=4.2.1 -fno-cxx-modules -fskip-odr-check-in-gmf -fcxx-exceptions -fexceptions -fmax-type-align=16 -fcommon -clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation -fno-odr-hash-protocols -clang-vendor-feature=+enableAggressiveVLAFolding -clang-vendor-feature=+revert09abecef7bbf -clang-vendor-feature=+thisNoAlignAttr -clang-vendor-feature=+thisNoNullAttr -clang-vendor-feature=+disableAtImportPrivateFrameworkInImplementationError -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_9515e.dir/CMakeCXXCompilerABI.cpp.o -x c++ /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp
+        clang -cc1 version 17.0.0 (clang-1700.0.13.5) default target arm64-apple-darwin24.6.0
         ignoring nonexistent directory "/usr/local/include"
         ignoring nonexistent directory "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/local/include"
         ignoring nonexistent directory "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/SubFrameworks"
@@ -1021,26 +1059,26 @@ events:
          /Library/Developer/CommandLineTools/usr/include
          /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks (framework directory)
         End of search list.
-        Linking CXX executable cmTC_430ac
-        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_430ac.dir/link.txt --verbose=1
-        Apple clang version 17.0.0 (clang-1700.0.13.3)
-        Target: arm64-apple-darwin24.4.0
+        Linking CXX executable cmTC_9515e
+        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_9515e.dir/link.txt --verbose=1
+        Apple clang version 17.0.0 (clang-1700.0.13.5)
+        Target: arm64-apple-darwin24.6.0
         Thread model: posix
         InstalledDir: /Library/Developer/CommandLineTools/usr/bin
-         "/Library/Developer/CommandLineTools/usr/bin/ld" -demangle -lto_library /Library/Developer/CommandLineTools/usr/lib/libLTO.dylib -dynamic -arch arm64 -platform_version macos 15.0.0 15.4 -syslibroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -mllvm -enable-linkonceodr-outlining -o cmTC_430ac -L/usr/local/lib -search_paths_first -headerpad_max_install_names -v CMakeFiles/cmTC_430ac.dir/CMakeCXXCompilerABI.cpp.o -lc++ -lSystem /Library/Developer/CommandLineTools/usr/lib/clang/17/lib/darwin/libclang_rt.osx.a
-        @(#)PROGRAM:ld PROJECT:ld-1167.4.1
-        BUILD 20:00:10 Mar 12 2025
+         "/Library/Developer/CommandLineTools/usr/bin/ld" -demangle -lto_library /Library/Developer/CommandLineTools/usr/lib/libLTO.dylib -dynamic -arch arm64 -platform_version macos 15.0.0 15.5 -syslibroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -mllvm -enable-linkonceodr-outlining -o cmTC_9515e -L/usr/local/lib -search_paths_first -headerpad_max_install_names -v CMakeFiles/cmTC_9515e.dir/CMakeCXXCompilerABI.cpp.o -lc++ -lSystem /Library/Developer/CommandLineTools/usr/lib/clang/17/lib/darwin/libclang_rt.osx.a
+        @(#)PROGRAM:ld PROJECT:ld-1167.5
+        BUILD 01:45:05 Apr 30 2025
         configured to support archs: armv6 armv7 armv7s arm64 arm64e arm64_32 i386 x86_64 x86_64h armv6m armv7k armv7m armv7em
         will use ld-classic for: armv6 armv7 armv7s i386 armv6m armv7k armv7m armv7em
         LTO support using: LLVM version 17.0.0 (static support for 29, runtime is 29)
-        TAPI support using: Apple TAPI version 17.0.0 (tapi-1700.0.3.4)
+        TAPI support using: Apple TAPI version 17.0.0 (tapi-1700.0.3.5)
         Library search paths:
         	/usr/local/lib
         	/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib
         	/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib/swift
         Framework search paths:
         	/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks
-        /usr/bin/clang++  -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names  -v -Wl,-v CMakeFiles/cmTC_430ac.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_430ac
+        /usr/bin/clang++  -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names  -v -Wl,-v CMakeFiles/cmTC_9515e.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_9515e
         
       exitCode: 0
   -
@@ -1084,20 +1122,20 @@ events:
       Parsed CXX implicit link information:
         link line regex: [^( *|.*[/\\])(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\\]+-)?ld|collect2)[^/\\]*( |$)]
         linker tool regex: [^[ 	]*(->|")?[ 	]*(([^"]*[/\\])?(ld[0-9]*(|\\.[a-rt-z][a-z]*|\\.s[a-np-z][a-z]*|\\.so[a-z]+)))("|,| |$)]
-        ignore line: [Change Dir: '/Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/build/CMakeFiles/CMakeScratch/TryCompile-ngC5n0']
+        ignore line: [Change Dir: '/Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/build/CMakeFiles/CMakeScratch/TryCompile-yrmCUx']
         ignore line: []
-        ignore line: [Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_430ac/fast]
-        ignore line: [/Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/cmTC_430ac.dir/build.make CMakeFiles/cmTC_430ac.dir/build]
-        ignore line: [Building CXX object CMakeFiles/cmTC_430ac.dir/CMakeCXXCompilerABI.cpp.o]
-        ignore line: [/usr/bin/clang++   -arch arm64   -v -Wl -v -MD -MT CMakeFiles/cmTC_430ac.dir/CMakeCXXCompilerABI.cpp.o -MF CMakeFiles/cmTC_430ac.dir/CMakeCXXCompilerABI.cpp.o.d -o CMakeFiles/cmTC_430ac.dir/CMakeCXXCompilerABI.cpp.o -c /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp]
-        ignore line: [Apple clang version 17.0.0 (clang-1700.0.13.3)]
-        ignore line: [Target: arm64-apple-darwin24.4.0]
+        ignore line: [Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_9515e/fast]
+        ignore line: [/Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/cmTC_9515e.dir/build.make CMakeFiles/cmTC_9515e.dir/build]
+        ignore line: [Building CXX object CMakeFiles/cmTC_9515e.dir/CMakeCXXCompilerABI.cpp.o]
+        ignore line: [/usr/bin/clang++   -arch arm64   -v -Wl -v -MD -MT CMakeFiles/cmTC_9515e.dir/CMakeCXXCompilerABI.cpp.o -MF CMakeFiles/cmTC_9515e.dir/CMakeCXXCompilerABI.cpp.o.d -o CMakeFiles/cmTC_9515e.dir/CMakeCXXCompilerABI.cpp.o -c /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp]
+        ignore line: [Apple clang version 17.0.0 (clang-1700.0.13.5)]
+        ignore line: [Target: arm64-apple-darwin24.6.0]
         ignore line: [Thread model: posix]
         ignore line: [InstalledDir: /Library/Developer/CommandLineTools/usr/bin]
         ignore line: [clang++: warning: -Wl -v: 'linker' input unused [-Wunused-command-line-argument]]
         ignore line: [ignoring nonexistent directory "/Library/Developer/CommandLineTools/usr/bin/../include/c++/v1"]
-        ignore line: [ "/Library/Developer/CommandLineTools/usr/bin/clang" -cc1 -triple arm64-apple-macosx15.0.0 -Wundef-prefix=TARGET_OS_ -Wdeprecated-objc-isa-usage -Werror=deprecated-objc-isa-usage -Werror=implicit-function-declaration -emit-obj -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model pic -pic-level 2 -mframe-pointer=non-leaf -fno-strict-return -ffp-contract=on -fno-rounding-math -funwind-tables=1 -fobjc-msgsend-selector-stubs -target-sdk-version=15.4 -fvisibility-inlines-hidden-static-local-var -fdefine-target-os-macros -fno-assume-unique-vtables -fno-modulemap-allow-subdirectory-search -target-cpu apple-m1 -target-feature +zcm -target-feature +zcz -target-feature +v8.5a -target-feature +aes -target-feature +altnzcv -target-feature +ccdp -target-feature +complxnum -target-feature +crc -target-feature +dotprod -target-feature +fp-armv8 -target-feature +fp16fml -target-feature +fptoint -target-feature +fullfp16 -target-feature +jsconv -target-feature +lse -target-feature +neon -target-feature +pauth -target-feature +perfmon -target-feature +predres -target-feature +ras -target-feature +rcpc -target-feature +rdm -target-feature +sb -target-feature +sha2 -target-feature +sha3 -target-feature +specrestrict -target-feature +ssbs -target-abi darwinpcs -debugger-tuning=lldb -fdebug-compilation-dir=/Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/build/CMakeFiles/CMakeScratch/TryCompile-ngC5n0 -target-linker-version 1167.4.1 -v -fcoverage-compilation-dir=/Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/build/CMakeFiles/CMakeScratch/TryCompile-ngC5n0 -resource-dir /Library/Developer/CommandLineTools/usr/lib/clang/17 -dependency-file CMakeFiles/cmTC_430ac.dir/CMakeCXXCompilerABI.cpp.o.d -skip-unused-modulemap-deps -MT CMakeFiles/cmTC_430ac.dir/CMakeCXXCompilerABI.cpp.o -sys-header-deps -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -I/usr/local/include -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1 -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/local/include -internal-isystem /Library/Developer/CommandLineTools/usr/lib/clang/17/include -internal-externc-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -internal-externc-isystem /Library/Developer/CommandLineTools/usr/include -Wno-reorder-init-list -Wno-implicit-int-float-conversion -Wno-c99-designator -Wno-final-dtor-non-final-class -Wno-extra-semi-stmt -Wno-misleading-indentation -Wno-quoted-include-in-framework-header -Wno-implicit-fallthrough -Wno-enum-enum-conversion -Wno-enum-float-conversion -Wno-elaborated-enum-base -Wno-reserved-identifier -Wno-gnu-folding-constant -fdeprecated-macro -ferror-limit 19 -stack-protector 1 -fstack-check -mdarwin-stkchk-strong-link -fblocks -fencode-extended-block-signature -fregister-global-dtors-with-atexit -fgnuc-version=4.2.1 -fno-cxx-modules -fskip-odr-check-in-gmf -fcxx-exceptions -fexceptions -fmax-type-align=16 -fcommon -clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation -fno-odr-hash-protocols -clang-vendor-feature=+enableAggressiveVLAFolding -clang-vendor-feature=+revert09abecef7bbf -clang-vendor-feature=+thisNoAlignAttr -clang-vendor-feature=+thisNoNullAttr -clang-vendor-feature=+disableAtImportPrivateFrameworkInImplementationError -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_430ac.dir/CMakeCXXCompilerABI.cpp.o -x c++ /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp]
-        ignore line: [clang -cc1 version 17.0.0 (clang-1700.0.13.3) default target arm64-apple-darwin24.4.0]
+        ignore line: [ "/Library/Developer/CommandLineTools/usr/bin/clang" -cc1 -triple arm64-apple-macosx15.0.0 -Wundef-prefix=TARGET_OS_ -Wdeprecated-objc-isa-usage -Werror=deprecated-objc-isa-usage -Werror=implicit-function-declaration -emit-obj -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model pic -pic-level 2 -mframe-pointer=non-leaf -fno-strict-return -ffp-contract=on -fno-rounding-math -funwind-tables=1 -fobjc-msgsend-selector-stubs -target-sdk-version=15.5 -fvisibility-inlines-hidden-static-local-var -fdefine-target-os-macros -fno-assume-unique-vtables -fno-modulemap-allow-subdirectory-search -target-cpu apple-m1 -target-feature +zcm -target-feature +zcz -target-feature +v8.5a -target-feature +aes -target-feature +altnzcv -target-feature +ccdp -target-feature +complxnum -target-feature +crc -target-feature +dotprod -target-feature +fp-armv8 -target-feature +fp16fml -target-feature +fptoint -target-feature +fullfp16 -target-feature +jsconv -target-feature +lse -target-feature +neon -target-feature +pauth -target-feature +perfmon -target-feature +predres -target-feature +ras -target-feature +rcpc -target-feature +rdm -target-feature +sb -target-feature +sha2 -target-feature +sha3 -target-feature +specrestrict -target-feature +ssbs -target-abi darwinpcs -debugger-tuning=lldb -fdebug-compilation-dir=/Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/build/CMakeFiles/CMakeScratch/TryCompile-yrmCUx -target-linker-version 1167.5 -v -fcoverage-compilation-dir=/Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/build/CMakeFiles/CMakeScratch/TryCompile-yrmCUx -resource-dir /Library/Developer/CommandLineTools/usr/lib/clang/17 -dependency-file CMakeFiles/cmTC_9515e.dir/CMakeCXXCompilerABI.cpp.o.d -skip-unused-modulemap-deps -MT CMakeFiles/cmTC_9515e.dir/CMakeCXXCompilerABI.cpp.o -sys-header-deps -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -I/usr/local/include -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1 -internal-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/local/include -internal-isystem /Library/Developer/CommandLineTools/usr/lib/clang/17/include -internal-externc-isystem /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include -internal-externc-isystem /Library/Developer/CommandLineTools/usr/include -Wno-reorder-init-list -Wno-implicit-int-float-conversion -Wno-c99-designator -Wno-final-dtor-non-final-class -Wno-extra-semi-stmt -Wno-misleading-indentation -Wno-quoted-include-in-framework-header -Wno-implicit-fallthrough -Wno-enum-enum-conversion -Wno-enum-float-conversion -Wno-elaborated-enum-base -Wno-reserved-identifier -Wno-gnu-folding-constant -fdeprecated-macro -ferror-limit 19 -stack-protector 1 -fstack-check -mdarwin-stkchk-strong-link -fblocks -fencode-extended-block-signature -fregister-global-dtors-with-atexit -fgnuc-version=4.2.1 -fno-cxx-modules -fskip-odr-check-in-gmf -fcxx-exceptions -fexceptions -fmax-type-align=16 -fcommon -clang-vendor-feature=+disableNonDependentMemberExprInCurrentInstantiation -fno-odr-hash-protocols -clang-vendor-feature=+enableAggressiveVLAFolding -clang-vendor-feature=+revert09abecef7bbf -clang-vendor-feature=+thisNoAlignAttr -clang-vendor-feature=+thisNoNullAttr -clang-vendor-feature=+disableAtImportPrivateFrameworkInImplementationError -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_9515e.dir/CMakeCXXCompilerABI.cpp.o -x c++ /opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp]
+        ignore line: [clang -cc1 version 17.0.0 (clang-1700.0.13.5) default target arm64-apple-darwin24.6.0]
         ignore line: [ignoring nonexistent directory "/usr/local/include"]
         ignore line: [ignoring nonexistent directory "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/local/include"]
         ignore line: [ignoring nonexistent directory "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/SubFrameworks"]
@@ -1110,13 +1148,13 @@ events:
         ignore line: [ /Library/Developer/CommandLineTools/usr/include]
         ignore line: [ /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks (framework directory)]
         ignore line: [End of search list.]
-        ignore line: [Linking CXX executable cmTC_430ac]
-        ignore line: [/opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_430ac.dir/link.txt --verbose=1]
-        ignore line: [Apple clang version 17.0.0 (clang-1700.0.13.3)]
-        ignore line: [Target: arm64-apple-darwin24.4.0]
+        ignore line: [Linking CXX executable cmTC_9515e]
+        ignore line: [/opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_9515e.dir/link.txt --verbose=1]
+        ignore line: [Apple clang version 17.0.0 (clang-1700.0.13.5)]
+        ignore line: [Target: arm64-apple-darwin24.6.0]
         ignore line: [Thread model: posix]
         ignore line: [InstalledDir: /Library/Developer/CommandLineTools/usr/bin]
-        link line: [ "/Library/Developer/CommandLineTools/usr/bin/ld" -demangle -lto_library /Library/Developer/CommandLineTools/usr/lib/libLTO.dylib -dynamic -arch arm64 -platform_version macos 15.0.0 15.4 -syslibroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -mllvm -enable-linkonceodr-outlining -o cmTC_430ac -L/usr/local/lib -search_paths_first -headerpad_max_install_names -v CMakeFiles/cmTC_430ac.dir/CMakeCXXCompilerABI.cpp.o -lc++ -lSystem /Library/Developer/CommandLineTools/usr/lib/clang/17/lib/darwin/libclang_rt.osx.a]
+        link line: [ "/Library/Developer/CommandLineTools/usr/bin/ld" -demangle -lto_library /Library/Developer/CommandLineTools/usr/lib/libLTO.dylib -dynamic -arch arm64 -platform_version macos 15.0.0 15.5 -syslibroot /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk -mllvm -enable-linkonceodr-outlining -o cmTC_9515e -L/usr/local/lib -search_paths_first -headerpad_max_install_names -v CMakeFiles/cmTC_9515e.dir/CMakeCXXCompilerABI.cpp.o -lc++ -lSystem /Library/Developer/CommandLineTools/usr/lib/clang/17/lib/darwin/libclang_rt.osx.a]
           arg [/Library/Developer/CommandLineTools/usr/bin/ld] ==> ignore
           arg [-demangle] ==> ignore
           arg [-lto_library] ==> ignore, skip following value
@@ -1127,18 +1165,18 @@ events:
           arg [-platform_version] ==> ignore
           arg [macos] ==> ignore
           arg [15.0.0] ==> ignore
-          arg [15.4] ==> ignore
+          arg [15.5] ==> ignore
           arg [-syslibroot] ==> ignore
           arg [/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk] ==> ignore
           arg [-mllvm] ==> ignore
           arg [-enable-linkonceodr-outlining] ==> ignore
           arg [-o] ==> ignore
-          arg [cmTC_430ac] ==> ignore
+          arg [cmTC_9515e] ==> ignore
           arg [-L/usr/local/lib] ==> dir [/usr/local/lib]
           arg [-search_paths_first] ==> ignore
           arg [-headerpad_max_install_names] ==> ignore
           arg [-v] ==> ignore
-          arg [CMakeFiles/cmTC_430ac.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
+          arg [CMakeFiles/cmTC_9515e.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
           arg [-lc++] ==> lib [c++]
           arg [-lSystem] ==> lib [System]
           arg [/Library/Developer/CommandLineTools/usr/lib/clang/17/lib/darwin/libclang_rt.osx.a] ==> lib [/Library/Developer/CommandLineTools/usr/lib/clang/17/lib/darwin/libclang_rt.osx.a]
@@ -1167,12 +1205,12 @@ events:
       - "CMakeLists.txt:2 (project)"
     message: |
       Running the CXX compiler's linker: "/Library/Developer/CommandLineTools/usr/bin/ld" "-v"
-      @(#)PROGRAM:ld PROJECT:ld-1167.4.1
-      BUILD 20:00:10 Mar 12 2025
+      @(#)PROGRAM:ld PROJECT:ld-1167.5
+      BUILD 01:45:05 Apr 30 2025
       configured to support archs: armv6 armv7 armv7s arm64 arm64e arm64_32 i386 x86_64 x86_64h armv6m armv7k armv7m armv7em
       will use ld-classic for: armv6 armv7 armv7s i386 armv6m armv7k armv7m armv7em
       LTO support using: LLVM version 17.0.0 (static support for 29, runtime is 29)
-      TAPI support using: Apple TAPI version 17.0.0 (tapi-1700.0.3.4)
+      TAPI support using: Apple TAPI version 17.0.0 (tapi-1700.0.3.5)
   -
     kind: "find_package-v1"
     backtrace:
@@ -1192,8 +1230,8 @@ events:
       version_complete: "1.89.0"
       exact: true
     settings:
-      required: "required_explicit"
-      quiet: false
+      required: "optional"
+      quiet: true
       global: false
       policy_scope: true
       bypass_provider: false
@@ -1240,6 +1278,243 @@ events:
       version: "1.89.0"
     search_context:
       ENV{PATH}:
+        - "/opt/homebrew/opt/openjdk@17/bin"
+        - "/opt/homebrew/opt/libpq/bin"
+        - "/opt/homebrew/bin"
+        - "/opt/homebrew/sbin"
+        - "/Library/Frameworks/Python.framework/Versions/3.12/bin"
+        - "/usr/local/bin"
+        - "/System/Cryptexes/App/usr/bin"
+        - "/usr/bin"
+        - "/bin"
+        - "/usr/sbin"
+        - "/sbin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
+        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
+        - "/usr/local/share/dotnet"
+        - "~/.dotnet/tools"
+      CMAKE_INSTALL_PREFIX: "/usr/local"
+      CMAKE_SYSTEM_PREFIX_PATH:
+        - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr"
+        - "/opt/homebrew"
+        - "/usr/local"
+        - "/usr"
+        - "/"
+        - "/opt/homebrew"
+        - "/usr/local"
+        - "/usr/X11R6"
+        - "/usr/pkg"
+        - "/opt"
+        - "/sw"
+        - "/opt/local"
+      CMAKE_SYSTEM_FRAMEWORK_PATH:
+        - "~/Library/Frameworks"
+        - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/Library/Frameworks"
+        - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/Network/Library/Frameworks"
+        - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks"
+        - "/Library/Developer/CommandLineTools/Library/Frameworks"
+        - "/Library/Developer/CommandLineTools/Library/Frameworks"
+        - "/Library/Frameworks"
+        - "/Network/Library/Frameworks"
+        - "/System/Library/Frameworks"
+  -
+    kind: "find_package-v1"
+    backtrace:
+      - "/opt/homebrew/lib/cmake/Boost-1.89.0/BoostConfig.cmake:141 (find_package)"
+      - "/opt/homebrew/lib/cmake/Boost-1.89.0/BoostConfig.cmake:262 (boost_find_component)"
+      - "CMakeLists.txt:8 (find_package)"
+    name: "boost_system"
+    configs:
+      -
+        filename: "boost_systemConfig.cmake"
+        kind: "cmake"
+      -
+        filename: "boost_system-config.cmake"
+        kind: "cmake"
+    version_request:
+      version: "1.89.0"
+      version_complete: "1.89.0"
+      exact: true
+    settings:
+      required: "optional"
+      quiet: true
+      global: false
+      policy_scope: true
+      bypass_provider: false
+      hints:
+        - "/opt/homebrew/lib/cmake"
+      names:
+        - "boost_system"
+      path_suffixes:
+        - ""
+      paths:
+        CMAKE_FIND_USE_CMAKE_PATH: true
+        CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
+        CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
+        CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
+        CMAKE_FIND_USE_INSTALL_PREFIX: true
+        CMAKE_FIND_USE_PACKAGE_ROOT_PATH: true
+        CMAKE_FIND_USE_CMAKE_PACKAGE_REGISTRY: true
+        CMAKE_FIND_USE_SYSTEM_PACKAGE_REGISTRY: true
+        CMAKE_FIND_ROOT_PATH_MODE: "BOTH"
+    candidates:
+      -
+        path: "/Users/vilenislamov/Desktop/\u043f\u0440\u043e\u0435\u043a\u0442\u044b/CrossPlatform/chat/build/CMakeFiles/pkgRedirects/boost_systemConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/Users/vilenislamov/Desktop/\u043f\u0440\u043e\u0435\u043a\u0442\u044b/CrossPlatform/chat/build/CMakeFiles/pkgRedirects/boost_system-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/opt/homebrew/lib/cmake/boost_systemConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/opt/homebrew/lib/cmake/boost_system-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/opt/homebrew/opt/openjdk@17/boost_systemConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/opt/homebrew/opt/openjdk@17/boost_system-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/opt/homebrew/opt/libpq/boost_systemConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/opt/homebrew/opt/libpq/boost_system-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/opt/homebrew/boost_systemConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/opt/homebrew/boost_system-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/Library/Frameworks/Python.framework/Versions/3.12/boost_systemConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/Library/Frameworks/Python.framework/Versions/3.12/boost_system-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/usr/local/boost_systemConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/usr/local/boost_system-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/System/Cryptexes/App/usr/boost_systemConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/System/Cryptexes/App/usr/boost_system-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/usr/boost_systemConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/usr/boost_system-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/boost_systemConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/boost_system-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/usr/local/share/dotnet/boost_systemConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/usr/local/share/dotnet/boost_system-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/boost_systemConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/boost_system-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/opt/boost_systemConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/opt/boost_system-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/boost_systemConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/boost_system-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/Library/Developer/CommandLineTools/Library/Frameworks/boost_systemConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/Library/Developer/CommandLineTools/Library/Frameworks/boost_system-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/Library/Frameworks/boost_systemConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/Library/Frameworks/boost_system-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/System/Library/Frameworks/boost_systemConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/System/Library/Frameworks/boost_system-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/Users/vilenislamov/Applications/boost_systemConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/Users/vilenislamov/Applications/boost_system-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/Applications/boost_systemConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/Applications/boost_system-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+    found: null
+    search_context:
+      ENV{PATH}:
+        - "/opt/homebrew/opt/openjdk@17/bin"
         - "/opt/homebrew/opt/libpq/bin"
         - "/opt/homebrew/bin"
         - "/opt/homebrew/sbin"
@@ -1284,6 +1559,11 @@ events:
     backtrace:
       - "CMakeLists.txt:8 (find_package)"
     name: "Boost"
+    components:
+      -
+        name: "system"
+        required: true
+        found: false
     configs:
       -
         filename: "BoostConfig.cmake"
@@ -1294,8 +1574,8 @@ events:
     version_request:
       exact: false
     settings:
-      required: "required_explicit"
-      quiet: false
+      required: "optional"
+      quiet: true
       global: false
       policy_scope: true
       bypass_provider: false
@@ -1320,6 +1600,14 @@ events:
         reason: "no_exist"
       -
         path: "/Users/vilenislamov/Desktop/\u043f\u0440\u043e\u0435\u043a\u0442\u044b/CrossPlatform/chat/build/CMakeFiles/pkgRedirects/boost-config.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/opt/homebrew/opt/openjdk@17/BoostConfig.cmake"
+        mode: "config"
+        reason: "no_exist"
+      -
+        path: "/opt/homebrew/opt/openjdk@17/boost-config.cmake"
         mode: "config"
         reason: "no_exist"
       -
@@ -1552,6 +1840,7 @@ events:
       version: "1.89.0"
     search_context:
       ENV{PATH}:
+        - "/opt/homebrew/opt/openjdk@17/bin"
         - "/opt/homebrew/opt/libpq/bin"
         - "/opt/homebrew/bin"
         - "/opt/homebrew/sbin"
@@ -1598,12 +1887,12 @@ events:
       - "/opt/homebrew/share/cmake/Modules/CheckCXXSourceCompiles.cmake:103 (cmake_check_source_compiles)"
       - "/opt/homebrew/share/cmake/Modules/FindThreads.cmake:99 (check_cxx_source_compiles)"
       - "/opt/homebrew/share/cmake/Modules/FindThreads.cmake:163 (_threads_check_libc)"
-      - "CMakeLists.txt:9 (find_package)"
+      - "CMakeLists.txt:13 (find_package)"
     checks:
       - "Performing Test CMAKE_HAVE_LIBC_PTHREAD"
     directories:
-      source: "/Users/vilenislamov/Desktop/\u043f\u0440\u043e\u0435\u043a\u0442\u044b/CrossPlatform/chat/build/CMakeFiles/CMakeScratch/TryCompile-hkEVWk"
-      binary: "/Users/vilenislamov/Desktop/\u043f\u0440\u043e\u0435\u043a\u0442\u044b/CrossPlatform/chat/build/CMakeFiles/CMakeScratch/TryCompile-hkEVWk"
+      source: "/Users/vilenislamov/Desktop/\u043f\u0440\u043e\u0435\u043a\u0442\u044b/CrossPlatform/chat/build/CMakeFiles/CMakeScratch/TryCompile-4i1LlW"
+      binary: "/Users/vilenislamov/Desktop/\u043f\u0440\u043e\u0435\u043a\u0442\u044b/CrossPlatform/chat/build/CMakeFiles/CMakeScratch/TryCompile-4i1LlW"
     cmakeVariables:
       CMAKE_CXX_FLAGS: ""
       CMAKE_CXX_FLAGS_DEBUG: "-g"
@@ -1615,265 +1904,15 @@ events:
       variable: "CMAKE_HAVE_LIBC_PTHREAD"
       cached: true
       stdout: |
-        Change Dir: '/Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/build/CMakeFiles/CMakeScratch/TryCompile-hkEVWk'
+        Change Dir: '/Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/build/CMakeFiles/CMakeScratch/TryCompile-4i1LlW'
         
-        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_d84da/fast
-        /Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/cmTC_d84da.dir/build.make CMakeFiles/cmTC_d84da.dir/build
-        Building CXX object CMakeFiles/cmTC_d84da.dir/src.cxx.o
-        /usr/bin/clang++ -DCMAKE_HAVE_LIBC_PTHREAD  -std=gnu++20 -arch arm64 -MD -MT CMakeFiles/cmTC_d84da.dir/src.cxx.o -MF CMakeFiles/cmTC_d84da.dir/src.cxx.o.d -o CMakeFiles/cmTC_d84da.dir/src.cxx.o -c /Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/build/CMakeFiles/CMakeScratch/TryCompile-hkEVWk/src.cxx
-        Linking CXX executable cmTC_d84da
-        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_d84da.dir/link.txt --verbose=1
-        /usr/bin/clang++  -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/cmTC_d84da.dir/src.cxx.o -o cmTC_d84da
+        Run Build Command(s): /opt/homebrew/bin/cmake -E env VERBOSE=1 /usr/bin/make -f Makefile cmTC_658cc/fast
+        /Library/Developer/CommandLineTools/usr/bin/make  -f CMakeFiles/cmTC_658cc.dir/build.make CMakeFiles/cmTC_658cc.dir/build
+        Building CXX object CMakeFiles/cmTC_658cc.dir/src.cxx.o
+        /usr/bin/clang++ -DCMAKE_HAVE_LIBC_PTHREAD  -std=gnu++20 -arch arm64 -MD -MT CMakeFiles/cmTC_658cc.dir/src.cxx.o -MF CMakeFiles/cmTC_658cc.dir/src.cxx.o.d -o CMakeFiles/cmTC_658cc.dir/src.cxx.o -c /Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/build/CMakeFiles/CMakeScratch/TryCompile-4i1LlW/src.cxx
+        Linking CXX executable cmTC_658cc
+        /opt/homebrew/bin/cmake -E cmake_link_script CMakeFiles/cmTC_658cc.dir/link.txt --verbose=1
+        /usr/bin/clang++  -arch arm64 -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/cmTC_658cc.dir/src.cxx.o -o cmTC_658cc
         
       exitCode: 0
-...
-
----
-events:
-  -
-    kind: "find_package-v1"
-    backtrace:
-      - "/opt/homebrew/lib/cmake/Boost-1.89.0/BoostConfig.cmake:141 (find_package)"
-      - "/opt/homebrew/lib/cmake/Boost-1.89.0/BoostConfig.cmake:262 (boost_find_component)"
-      - "CMakeLists.txt:8 (find_package)"
-    name: "boost_system"
-    configs:
-      -
-        filename: "boost_systemConfig.cmake"
-        kind: "cmake"
-      -
-        filename: "boost_system-config.cmake"
-        kind: "cmake"
-    version_request:
-      version: "1.89.0"
-      version_complete: "1.89.0"
-      exact: true
-    settings:
-      required: "optional"
-      quiet: true
-      global: false
-      policy_scope: true
-      bypass_provider: false
-      hints:
-        - "/opt/homebrew/lib/cmake"
-      names:
-        - "boost_system"
-      path_suffixes:
-        - ""
-      paths:
-        CMAKE_FIND_USE_CMAKE_PATH: true
-        CMAKE_FIND_USE_CMAKE_ENVIRONMENT_PATH: true
-        CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH: true
-        CMAKE_FIND_USE_CMAKE_SYSTEM_PATH: true
-        CMAKE_FIND_USE_INSTALL_PREFIX: true
-        CMAKE_FIND_USE_PACKAGE_ROOT_PATH: true
-        CMAKE_FIND_USE_CMAKE_PACKAGE_REGISTRY: true
-        CMAKE_FIND_USE_SYSTEM_PACKAGE_REGISTRY: true
-        CMAKE_FIND_ROOT_PATH_MODE: "BOTH"
-    candidates:
-      -
-        path: "/Users/vilenislamov/Desktop/\u043f\u0440\u043e\u0435\u043a\u0442\u044b/CrossPlatform/chat/build/CMakeFiles/pkgRedirects/boost_systemConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/Users/vilenislamov/Desktop/\u043f\u0440\u043e\u0435\u043a\u0442\u044b/CrossPlatform/chat/build/CMakeFiles/pkgRedirects/boost_system-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/opt/homebrew/opt/boost/boost_systemConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/opt/homebrew/opt/boost/boost_system-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/opt/homebrew/lib/cmake/boost_systemConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/opt/homebrew/lib/cmake/boost_system-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/opt/homebrew/opt/openjdk@17/boost_systemConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/opt/homebrew/opt/openjdk@17/boost_system-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/opt/homebrew/opt/libpq/boost_systemConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/opt/homebrew/opt/libpq/boost_system-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/opt/homebrew/boost_systemConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/opt/homebrew/boost_system-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/Library/Frameworks/Python.framework/Versions/3.12/boost_systemConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/Library/Frameworks/Python.framework/Versions/3.12/boost_system-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/usr/local/boost_systemConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/usr/local/boost_system-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/System/Cryptexes/App/usr/boost_systemConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/System/Cryptexes/App/usr/boost_system-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/usr/boost_systemConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/usr/boost_system-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/boost_systemConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/boost_system-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/usr/local/share/dotnet/boost_systemConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/usr/local/share/dotnet/boost_system-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/boost_systemConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/boost_system-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/opt/boost_systemConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/opt/boost_system-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/boost_systemConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks/boost_system-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/Library/Developer/CommandLineTools/Library/Frameworks/boost_systemConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/Library/Developer/CommandLineTools/Library/Frameworks/boost_system-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/Library/Frameworks/boost_systemConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/Library/Frameworks/boost_system-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/System/Library/Frameworks/boost_systemConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/System/Library/Frameworks/boost_system-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/Users/vilenislamov/Applications/boost_systemConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/Users/vilenislamov/Applications/boost_system-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/Applications/boost_systemConfig.cmake"
-        mode: "config"
-        reason: "no_exist"
-      -
-        path: "/Applications/boost_system-config.cmake"
-        mode: "config"
-        reason: "no_exist"
-    found: null
-    search_context:
-      CMAKE_PREFIX_PATH:
-        - "/opt/homebrew/opt/boost"
-      ENV{PATH}:
-        - "/opt/homebrew/opt/openjdk@17/bin"
-        - "/opt/homebrew/opt/libpq/bin"
-        - "/opt/homebrew/bin"
-        - "/opt/homebrew/sbin"
-        - "/Library/Frameworks/Python.framework/Versions/3.12/bin"
-        - "/usr/local/bin"
-        - "/System/Cryptexes/App/usr/bin"
-        - "/usr/bin"
-        - "/bin"
-        - "/usr/sbin"
-        - "/sbin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin"
-        - "/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin"
-        - "/usr/local/share/dotnet"
-        - "~/.dotnet/tools"
-      CMAKE_INSTALL_PREFIX: "/usr/local"
-      CMAKE_SYSTEM_PREFIX_PATH:
-        - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr"
-        - "/opt/homebrew"
-        - "/usr/local"
-        - "/usr"
-        - "/"
-        - "/opt/homebrew"
-        - "/usr/local"
-        - "/usr/X11R6"
-        - "/usr/pkg"
-        - "/opt"
-        - "/sw"
-        - "/opt/local"
-      CMAKE_SYSTEM_FRAMEWORK_PATH:
-        - "~/Library/Frameworks"
-        - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/Library/Frameworks"
-        - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/Network/Library/Frameworks"
-        - "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks"
-        - "/Library/Developer/CommandLineTools/Library/Frameworks"
-        - "/Library/Developer/CommandLineTools/Library/Frameworks"
-        - "/Library/Frameworks"
-        - "/Network/Library/Frameworks"
-        - "/System/Library/Frameworks"
 ...

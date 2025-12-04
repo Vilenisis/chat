@@ -67,6 +67,7 @@ all: CMakeFiles/chat_core.dir/all
 all: CMakeFiles/server.dir/all
 all: CMakeFiles/client.dir/all
 all: CMakeFiles/server_web.dir/all
+all: CMakeFiles/working_server.dir/all
 .PHONY : all
 
 # The main recursive "codegen" target.
@@ -74,6 +75,7 @@ codegen: CMakeFiles/chat_core.dir/codegen
 codegen: CMakeFiles/server.dir/codegen
 codegen: CMakeFiles/client.dir/codegen
 codegen: CMakeFiles/server_web.dir/codegen
+codegen: CMakeFiles/working_server.dir/codegen
 .PHONY : codegen
 
 # The main recursive "preinstall" target.
@@ -85,6 +87,7 @@ clean: CMakeFiles/chat_core.dir/clean
 clean: CMakeFiles/server.dir/clean
 clean: CMakeFiles/client.dir/clean
 clean: CMakeFiles/server_web.dir/clean
+clean: CMakeFiles/working_server.dir/clean
 .PHONY : clean
 
 #=============================================================================
@@ -214,6 +217,38 @@ CMakeFiles/server_web.dir/codegen:
 CMakeFiles/server_web.dir/clean:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/server_web.dir/build.make CMakeFiles/server_web.dir/clean
 .PHONY : CMakeFiles/server_web.dir/clean
+
+#=============================================================================
+# Target rules for target CMakeFiles/working_server.dir
+
+# All Build rule for target.
+CMakeFiles/working_server.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/working_server.dir/build.make CMakeFiles/working_server.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/working_server.dir/build.make CMakeFiles/working_server.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/build/CMakeFiles --progress-num=9,10 "Built target working_server"
+.PHONY : CMakeFiles/working_server.dir/all
+
+# Build rule for subdir invocation for target.
+CMakeFiles/working_server.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/build/CMakeFiles 2
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/working_server.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/build/CMakeFiles 0
+.PHONY : CMakeFiles/working_server.dir/rule
+
+# Convenience name for target.
+working_server: CMakeFiles/working_server.dir/rule
+.PHONY : working_server
+
+# codegen rule for target.
+CMakeFiles/working_server.dir/codegen:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/working_server.dir/build.make CMakeFiles/working_server.dir/codegen
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/Users/vilenislamov/Desktop/проекты/CrossPlatform/chat/build/CMakeFiles --progress-num=9,10 "Finished codegen for target working_server"
+.PHONY : CMakeFiles/working_server.dir/codegen
+
+# clean rule for target.
+CMakeFiles/working_server.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/working_server.dir/build.make CMakeFiles/working_server.dir/clean
+.PHONY : CMakeFiles/working_server.dir/clean
 
 #=============================================================================
 # Special targets to cleanup operation of make.

@@ -168,6 +168,19 @@ server_web/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/server_web.dir/build.make CMakeFiles/server_web.dir/build
 .PHONY : server_web/fast
 
+#=============================================================================
+# Target rules for targets named working_server
+
+# Build rule for target.
+working_server: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 working_server
+.PHONY : working_server
+
+# fast build rule for target.
+working_server/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/working_server.dir/build.make CMakeFiles/working_server.dir/build
+.PHONY : working_server/fast
+
 chat_lib.o: chat_lib.cpp.o
 .PHONY : chat_lib.o
 
@@ -264,6 +277,30 @@ server_web.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/server_web.dir/build.make CMakeFiles/server_web.dir/server_web.cpp.s
 .PHONY : server_web.cpp.s
 
+working_server.o: working_server.cpp.o
+.PHONY : working_server.o
+
+# target to build an object file
+working_server.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/working_server.dir/build.make CMakeFiles/working_server.dir/working_server.cpp.o
+.PHONY : working_server.cpp.o
+
+working_server.i: working_server.cpp.i
+.PHONY : working_server.i
+
+# target to preprocess a source file
+working_server.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/working_server.dir/build.make CMakeFiles/working_server.dir/working_server.cpp.i
+.PHONY : working_server.cpp.i
+
+working_server.s: working_server.cpp.s
+.PHONY : working_server.s
+
+# target to generate assembly for a file
+working_server.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/working_server.dir/build.make CMakeFiles/working_server.dir/working_server.cpp.s
+.PHONY : working_server.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -276,6 +313,7 @@ help:
 	@echo "... client"
 	@echo "... server"
 	@echo "... server_web"
+	@echo "... working_server"
 	@echo "... chat_lib.o"
 	@echo "... chat_lib.i"
 	@echo "... chat_lib.s"
@@ -288,6 +326,9 @@ help:
 	@echo "... server_web.o"
 	@echo "... server_web.i"
 	@echo "... server_web.s"
+	@echo "... working_server.o"
+	@echo "... working_server.i"
+	@echo "... working_server.s"
 .PHONY : help
 
 
