@@ -68,6 +68,13 @@ endif()
 
 target_link_libraries(server PRIVATE chat_core)
 
+# Добавьте это для правильной линковки на macOS
+set_target_properties(server PROPERTIES
+  BUILD_WITH_INSTALL_RPATH TRUE
+  INSTALL_RPATH "@loader_path"
+  INSTALL_RPATH_USE_LINK_PATH TRUE
+)
+
 # Для macOS rpath
 set_target_properties(server client server_web working_server PROPERTIES
   BUILD_WITH_INSTALL_RPATH TRUE

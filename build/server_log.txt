@@ -1,4 +1,0 @@
-=== Chat Server Started ===
-Web Chat UI: http://localhost:8080
-DLL Admin Panel: http://localhost:80
-==========================

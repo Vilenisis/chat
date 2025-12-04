@@ -379,7 +379,8 @@ public:
     }
 
     void do_read() {
-        ws_.async_read(buffer_, beast::bind_front_handler(&WSSession::on_read, shared_from_this()));
+        ws_.async_read(buffer_,
+            beast::bind_front_handler(&WSSession::on_read, shared_from_this()));
     }
 
     void on_read(beast::error_code ec, std::size_t) {
@@ -388,10 +389,13 @@ public:
             on_close();
             return;
         }
+        
         std::string line = beast::buffers_to_string(buffer_.data());
         std::cout << "Received message: " << line << std::endl;
         buffer_.consume(buffer_.size());
+        
         handle_line(line);
+        
         do_read();
     }
 
