@@ -6,6 +6,7 @@
 #include <boost/beast/version.hpp>
 #include <boost/beast/websocket.hpp>
 #include <algorithm>
+#include <array>
 #include <atomic>
 #include <csignal>
 #include <deque>
@@ -17,6 +18,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -308,9 +310,16 @@ updateDllStatus();
 </body></html>)HTML";
 
 // ========= Общее состояние чата с поддержкой DLL =========
+struct SessionBase {
+    virtual ~SessionBase() = default;
+    virtual void send_text(const std::string& s) = 0;
+    virtual std::string name() const = 0;
+    virtual void set_name(const std::string& new_name) = 0;
+};
+
 struct SharedState {
     // онлайн: name -> session
-    std::unordered_map<std::string, std::weak_ptr<class WSSession>> online;
+    std::unordered_map<std::string, std::weak_ptr<SessionBase>> online;
     // ip -> last name
     std::unordered_map<std::string, std::string> last_name_by_ip;
     // owner -> set
@@ -350,11 +359,12 @@ struct SharedState {
     }
 
     void broadcast_public(const std::string& from, const std::string& text);
-    void deliver_offline_if_any(const std::shared_ptr<class WSSession>& s);
+    void deliver_offline_if_any(const std::shared_ptr<SessionBase>& s);
+    void process_line(const std::shared_ptr<SessionBase>& session, std::string line);
 };
 
 // ========= WebSocket-сессия =========
-class WSSession : public std::enable_shared_from_this<WSSession> {
+class WSSession : public SessionBase, public std::enable_shared_from_this<WSSession> {
 public:
     WSSession(tcp::socket&& socket, std::shared_ptr<SharedState> state)
         : ws_(std::move(socket)), state_(std::move(state)) {}
@@ -389,22 +399,22 @@ public:
             on_close();
             return;
         }
-        
+
         std::string line = beast::buffers_to_string(buffer_.data());
         std::cout << "Received message: " << line << std::endl;
         buffer_.consume(buffer_.size());
-        
-        handle_line(line);
-        
+
+        state_->process_line(shared_from_this(), line);
+
         do_read();
     }
 
-    void send_text(const std::string& s) {
+    void send_text(const std::string& s) override {
         bool writing = !outbox_.empty();
-        
+
         // Применяем оранжевый цвет если DLL активна
         std::string colored_message = s;
-        if (state_->is_orange_color_enabled() && 
+        if (state_->is_orange_color_enabled() &&
             (s.rfind("MSG:", 0) == 0 || s.rfind("FAV:", 0) == 0 || s.rfind("DM:", 0) == 0)) {
             colored_message = "ORANGE:" + s;
         }
@@ -436,63 +446,10 @@ public:
         }
     }
 
-    const std::string& name() const { return name_; }
+    const std::string& name() const override { return name_; }
+    void set_name(const std::string& new_name) override { name_ = new_name; }
 
 private:
-    static std::string trim_after(const std::string& line, const std::string& cmd) {
-        if (line.size() <= cmd.size()) return "";
-        std::string rest = line.substr(cmd.size());
-        size_t p = rest.find_first_not_of(" \t");
-        if (p == std::string::npos) return "";
-        return rest.substr(p);
-    }
-
-    void handle_line(std::string line) {
-        std::cout << "Handling line: " << line << std::endl;
-        while (!line.empty() && (line.back() == '\n' || line.back() == '\r')) line.pop_back();
-
-        try {
-            if (line == "#help") {
-                send_text("SYS: Команды: #help, #who, #me <name>, #block <user>, #unblock <user>, #fav <user>, #unfav <user>, #massdm <text>, #dll_status");
-                send_text("SYS: ЛС: @user <text>");
-                return;
-            }
-
-            if (line.rfind("#me", 0) == 0) {
-                std::string newname = trim_after(line, "#me");
-                if (newname.empty()) {
-                    send_text("SYS: Укажите имя после команды #me");
-                    return;
-                }
-                auto it = state_->online.find(newname);
-                if (it != state_->online.end() && !it->second.expired() && it->second.lock().get() != this) {
-                    send_text("SYS: Имя уже занято");
-                    return;
-                }
-                if (!name_.empty()) {
-                    state_->online.erase(name_);
-                }
-                name_ = newname;
-                state_->online[name_] = weak_from_this();
-                send_text("SYS: Имя установлено: " + name_);
-                state_->deliver_offline_if_any(shared_from_this());
-                return;
-            }
-
-            if (name_.empty()) {
-                send_text("SYS: Сначала укажите имя: #me <name>");
-                return;
-            }
-
-            // Обработка других команд...
-            state_->broadcast_public(name_, line);
-
-        } catch (const std::exception& e) {
-            std::cerr << "Error in handle_line: " << e.what() << std::endl;
-            send_text("SYS: Произошла ошибка при обработке команды");
-        }
-    }
-
 private:
     websocket::stream<tcp::socket> ws_;
     beast::flat_buffer buffer_;
@@ -502,6 +459,94 @@ private:
     std::string ip_;
     friend struct SharedState;
     http::request<http::string_body> req_;
+};
+
+// ========= TCP-сессия (сырое подключение клиента) =========
+class TextSession : public SessionBase, public std::enable_shared_from_this<TextSession> {
+public:
+    TextSession(tcp::socket&& socket, std::shared_ptr<SharedState> state)
+        : socket_(std::move(socket)), state_(std::move(state)) {}
+
+    void start(beast::flat_buffer&& prebuffer = {}) {
+        append_prebuffer(prebuffer);
+        do_read();
+    }
+
+    void send_text(const std::string& s) override {
+        std::string payload = s;
+        if (state_->is_orange_color_enabled() &&
+            (s.rfind("MSG:", 0) == 0 || s.rfind("FAV:", 0) == 0 || s.rfind("DM:", 0) == 0)) {
+            payload = "ORANGE:" + s;
+        }
+        if (payload.empty() || payload.back() != '\n') payload.push_back('\n');
+        bool writing = !outbox_.empty();
+        outbox_.push_back(payload);
+        if (!writing) do_write();
+    }
+
+    std::string name() const override { return name_; }
+    void set_name(const std::string& new_name) override { name_ = new_name; }
+
+private:
+    void append_prebuffer(beast::flat_buffer& prebuffer) {
+        if (!prebuffer.size()) return;
+        for (auto seq : prebuffer.data()) {
+            const char* data = static_cast<const char*>(seq.data());
+            read_buffer_.append(data, data + seq.size());
+        }
+        process_lines();
+    }
+
+    void process_lines() {
+        for (;;) {
+            auto pos = read_buffer_.find('\n');
+            if (pos == std::string::npos) break;
+            std::string line = read_buffer_.substr(0, pos + 1);
+            read_buffer_.erase(0, pos + 1);
+            state_->process_line(shared_from_this(), line);
+        }
+    }
+
+    void do_read() {
+        auto self = shared_from_this();
+        socket_.async_read_some(
+            boost::asio::buffer(buffer_),
+            [this, self](beast::error_code ec, std::size_t bytes) {
+                if (ec) { on_close(); return; }
+                read_buffer_.append(buffer_.data(), buffer_.data() + bytes);
+                process_lines();
+                do_read();
+            });
+    }
+
+    void do_write() {
+        auto self = shared_from_this();
+        boost::asio::async_write(
+            socket_, boost::asio::buffer(outbox_.front()),
+            [this, self](beast::error_code ec, std::size_t) {
+                if (ec) { on_close(); return; }
+                outbox_.pop_front();
+                if (!outbox_.empty()) do_write();
+            });
+    }
+
+    void on_close() {
+        if (!name_.empty()) {
+            auto it = state_->online.find(name_);
+            if (it != state_->online.end() && !it->second.expired()) {
+                state_->online.erase(it);
+            }
+        }
+        beast::error_code ignored;
+        socket_.close(ignored);
+    }
+
+    tcp::socket socket_;
+    std::string read_buffer_;
+    std::deque<std::string> outbox_;
+    std::shared_ptr<SharedState> state_;
+    std::array<char, 1024> buffer_{};
+    std::string name_;
 };
 
 void SharedState::notify_dll_event(const std::string& message) {
@@ -529,7 +574,7 @@ void SharedState::broadcast_public(const std::string& from, const std::string& t
     }
 }
 
-void SharedState::deliver_offline_if_any(const std::shared_ptr<WSSession>& s) {
+void SharedState::deliver_offline_if_any(const std::shared_ptr<SessionBase>& s) {
     auto it = offline_inbox.find(s->name());
     if (it == offline_inbox.end()) return;
     for (auto& m : it->second) {
@@ -540,11 +585,144 @@ void SharedState::deliver_offline_if_any(const std::shared_ptr<WSSession>& s) {
     offline_inbox.erase(it);
 }
 
+void SharedState::process_line(const std::shared_ptr<SessionBase>& session, std::string line) {
+    auto trim_after = [](const std::string& src, const std::string& cmd) {
+        if (src.size() <= cmd.size()) return std::string();
+        std::string rest = src.substr(cmd.size());
+        size_t p = rest.find_first_not_of(" \t");
+        if (p == std::string::npos) return std::string();
+        return rest.substr(p);
+    };
+
+    std::cout << "Handling line: " << line << std::endl;
+    while (!line.empty() && (line.back() == '\n' || line.back() == '\r')) line.pop_back();
+
+    try {
+        if (line == "#help") {
+            session->send_text("SYS: Команды: #help, #who, #me <name>, #block <user>, #unblock <user>, #fav <user>, #unfav <user>, #massdm <text>, #dll_status");
+            session->send_text("SYS: ЛС: @user <text>");
+            return;
+        }
+
+        if (line.rfind("#me", 0) == 0) {
+            std::string newname = trim_after(line, "#me");
+            if (newname.empty()) {
+                session->send_text("SYS: Укажите имя после команды #me");
+                return;
+            }
+            auto it = online.find(newname);
+            if (it != online.end()) {
+                auto existing = it->second.lock();
+                if (existing && existing.get() != session.get()) {
+                    session->send_text("SYS: Имя уже занято");
+                    return;
+                }
+            }
+            if (!session->name().empty()) {
+                online.erase(session->name());
+            }
+            session->set_name(newname);
+            online[newname] = session;
+            session->send_text("SYS: Имя установлено: " + session->name());
+            deliver_offline_if_any(session);
+            return;
+        }
+
+        if (session->name().empty()) {
+            session->send_text("SYS: Сначала укажите имя: #me <name>");
+            return;
+        }
+
+        if (line == "#who") {
+            std::string out = "SYS: Online: ";
+            bool first = true;
+            for (auto& [n, _] : online) {
+                if (!first) out += ", ";
+                out += n;
+                first = false;
+            }
+            session->send_text(out);
+            return;
+        }
+
+        if (line.rfind("#block", 0) == 0) {
+            std::string who = trim_after(line, "#block");
+            if (who.empty() || who == session->name()) { session->send_text("SYS: #block <user>"); return; }
+            blacklist[session->name()].insert(who);
+            session->send_text("SYS: добавлен в ЧС: " + who);
+            return;
+        }
+        if (line.rfind("#unblock", 0) == 0) {
+            std::string who = trim_after(line, "#unblock");
+            if (who.empty()) { session->send_text("SYS: #unblock <user>"); return; }
+            if (blacklist[session->name()].erase(who)) session->send_text("SYS: удалён из ЧС: " + who);
+            else session->send_text("SYS: не был в ЧС: " + who);
+            return;
+        }
+
+        if (line.rfind("#fav", 0) == 0) {
+            std::string who = trim_after(line, "#fav");
+            if (who.empty() || who == session->name()) { session->send_text("SYS: #fav <user>"); return; }
+            favorites[session->name()].insert(who);
+            session->send_text("SYS: добавлен в любимые: " + who);
+            return;
+        }
+        if (line.rfind("#unfav", 0) == 0) {
+            std::string who = trim_after(line, "#unfav");
+            if (who.empty()) { session->send_text("SYS: #unfav <user>"); return; }
+            if (favorites[session->name()].erase(who)) session->send_text("SYS: удалён из любимых: " + who);
+            else session->send_text("SYS: не был в любимых: " + who);
+            return;
+        }
+
+        if (line.rfind("#massdm", 0) == 0) {
+            std::string text = trim_after(line, "#massdm");
+            if (text.empty()) { session->send_text("SYS: #massdm <text>"); return; }
+            for (auto& [name, sess] : online) {
+                auto target = sess.lock();
+                if (!target || target.get() == session.get()) continue;
+                if (is_blocked(name, session->name())) continue;
+                target->send_text("DM: от " + session->name() + ": " + text);
+            }
+            return;
+        }
+
+        if (line.rfind("@", 0) == 0) {
+            auto sp = line.find(' ');
+            std::string to = (sp == std::string::npos) ? line.substr(1) : line.substr(1, sp-1);
+            std::string text = (sp == std::string::npos) ? "" : line.substr(sp+1);
+            if (to.empty() || text.empty()) { session->send_text("SYS: формат ЛС: @user <text>"); return; }
+
+            if (online.count(to)) {
+                auto recip = online[to].lock();
+                if (recip && !is_blocked(recip->name(), session->name())) {
+                    recip->send_text("DM: от " + session->name() + ": " + text);
+                }
+                return;
+            }
+            auto& box = offline_inbox[to];
+            if (box.size() >= 10) {
+                session->send_text("SYS: ящик пользователя переполнен");
+            } else {
+                box.emplace_back(session->name(), text);
+                session->send_text("SYS: сообщение сохранено в офлайн-ящике для " + to);
+            }
+            return;
+        }
+
+        broadcast_public(session->name(), line);
+
+    } catch (const std::exception& e) {
+        std::cerr << "Error in handle_line: " << e.what() << std::endl;
+        session->send_text("SYS: Произошла ошибка при обработке команды");
+    }
+}
+
 // ========= HTTP-сессия для чата =========
 class HTTPSession : public std::enable_shared_from_this<HTTPSession> {
 public:
-    HTTPSession(tcp::socket&& socket, std::shared_ptr<SharedState> st)
-        : stream_(std::move(socket)), state_(std::move(st)) {}
+    HTTPSession(tcp::socket&& socket, std::shared_ptr<SharedState> st, beast::flat_buffer&& existing_buffer = {})
+        : stream_(std::move(socket)), buffer_(std::move(existing_buffer)), state_(std::move(st)) {}
 
     void run() { do_read(); }
 
@@ -881,6 +1059,51 @@ private:
     std::shared_ptr<SharedState> state_;
 };
 
+// ========= Определение протокола: HTTP/WebSocket или простой TCP =========
+class ProtocolDetector : public std::enable_shared_from_this<ProtocolDetector> {
+public:
+    ProtocolDetector(tcp::socket&& socket, std::shared_ptr<SharedState> st)
+        : socket_(std::move(socket)), state_(std::move(st)) {}
+
+    void run() {
+        socket_.async_read_some(
+            buffer_.prepare(1024),
+            beast::bind_front_handler(&ProtocolDetector::on_detect, shared_from_this()));
+    }
+
+private:
+    void on_detect(beast::error_code ec, std::size_t bytes) {
+        if (ec) return;
+        buffer_.commit(bytes);
+
+        if (looks_like_http()) {
+            auto session = std::make_shared<HTTPSession>(std::move(socket_), state_, std::move(buffer_));
+            session->run();
+        } else {
+            auto session = std::make_shared<TextSession>(std::move(socket_), state_);
+            session->start(std::move(buffer_));
+        }
+    }
+
+    bool looks_like_http() const {
+        if (buffer_.size() == 0) return true; // пустой буфер — читаем как HTTP
+        std::string prefix;
+        prefix.reserve(buffer_.size());
+        for (auto seq : buffer_.data()) {
+            const char* data = static_cast<const char*>(seq.data());
+            prefix.append(data, data + seq.size());
+        }
+        std::string_view sv(prefix.data(), prefix.size());
+        return sv.rfind("GET ", 0) == 0 || sv.rfind("POST ", 0) == 0 ||
+               sv.rfind("HEAD ", 0) == 0 || sv.rfind("PUT ", 0) == 0 ||
+               sv.find("HTTP/") != std::string::npos;
+    }
+
+    tcp::socket socket_;
+    beast::flat_buffer buffer_;
+    std::shared_ptr<SharedState> state_;
+};
+
 // ========= Listener для чата =========
 class Listener : public std::enable_shared_from_this<Listener> {
 public:
@@ -910,7 +1133,7 @@ private:
             std::cerr << "accept error: " << ec.message() << "\n";
             return do_accept();
         }
-        std::make_shared<HTTPSession>(std::move(socket), state_)->run();
+        std::make_shared<ProtocolDetector>(std::move(socket), state_)->run();
         do_accept();
     }
 
