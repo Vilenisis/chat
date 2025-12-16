@@ -3,12 +3,13 @@
 #if defined(_WIN32)
   #define CHAT_DLL_EXPORT extern "C" __declspec(dllexport)
 #else
-  #define CHAT_DLL_EXPORT extern "C" __attribute__((visibility("default")))
+  #define CHAT_DLL_EXPORT extern "C" __attribute__((visibility("default"), used))
 #endif
 
 // Простейший пример DLL, которая добавляет цвет сообщениям.
 // Ожидается формат текста: `TYPE: Текст сообщения` (например, ORANGE, MD, DM, SYS).
-// При необходимости можно добавить свои цвета в apply_chat_modifications.
+// Сервер всегда вызывает только chat_transform — остальные функции необязательные
+// вспомогательные (оставлены для примера расширений).
 CHAT_DLL_EXPORT void apply_chat_modifications(const char* message_type,
                                               char* color_code_buffer,
                                               int buffer_size);
