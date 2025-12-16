@@ -37,15 +37,14 @@ int main(int argc, char** argv) {
             while (running.load()) {
                 boost::system::error_code ec;
                 size_t n = boost::asio::read_until(socket, buf, '\n', ec);
-                if (ec) { 
-                    cerr << "Disconnected: " << ec.message() << "\n"; 
-                    running = false; 
-                    break; 
+                if (ec) {
+                    cerr << "Disconnected: " << ec.message() << "\n";
+                    running = false;
+                    break;
                 }
                 istream is(&buf);
                 string line;
                 getline(is, line);
-                cout << "Received: " << line << endl; // Лог полученного сообщения
 
                 // Игнорируем устаревший префикс ORANGE:, если он вдруг пришёл с сервера
                 if (line.rfind("ORANGE:", 0) == 0) {
