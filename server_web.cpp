@@ -1412,11 +1412,25 @@ std::string command =
         try {
             const std::string body = req_.body();
             std::string file_name = trim_ws(extract_json_value(body, "file_name"));
-            file_name = sanitize_filename(file_name, "");
             if (file_name.empty()) {
                 throw std::runtime_error("Не указано имя файла для удаления");
             }
 
+            // запрет путей
+            if (file_name.find("..") != std::string::npos ||
+                file_name.find('/')  != std::string::npos ||
+                file_name.find('\\') != std::string::npos) {
+                throw std::runtime_error("Некорректное имя файла");
+            }
+
+            // разрешаем только [A-Za-z0-9_.-]
+            for (unsigned char c : file_name) {
+                if (!(std::isalnum(c) || c=='_' || c=='-' || c=='.')) {
+                    throw std::runtime_error("Некорректное имя файла");
+                }
+            }
+
+           
             fs::path dll_path = fs::path(DLL_STORAGE_DIR) / file_name;
             if (dll_path.extension().empty()) {
                 dll_path.replace_extension(".dll");
