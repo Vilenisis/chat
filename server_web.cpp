@@ -507,6 +507,18 @@ struct SharedState {
 
         dlerror(); // сброс
         dll_transform = reinterpret_cast<transform_fn>(dlsym(dll_handle, "chat_transform"));
+        const char* sym_err = dlerror();
+
+        if (sym_err || !dll_transform) {
+            error = std::string("DLL загружена, но символ chat_transform не найден: ")
+                  + (sym_err ? sym_err : "unknown");
+            dlclose(dll_handle);
+            dll_handle = nullptr;
+            dll_transform = nullptr;
+            current_dll_name.clear();
+            return false;
+        }
+
         current_dll_name = dll_path.filename().string();
         return true;
     }
@@ -1284,7 +1296,11 @@ private:
                 cpp_out << cpp_code;
             }
 
+#ifdef __APPLE__
+            std::string command = "g++ -std=c++17 -dynamiclib -fPIC -O2 -o \"" + dll_path.string() + "\" \"" + temp_cpp.string() + "\" 2>&1";
+#else
             std::string command = "g++ -std=c++17 -shared -fPIC -O2 -o \"" + dll_path.string() + "\" \"" + temp_cpp.string() + "\" 2>&1";
+#endif
             auto [exit_code, output] = run_command_capture(command);
             fs::remove(temp_cpp);
 
