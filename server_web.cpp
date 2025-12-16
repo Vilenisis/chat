@@ -8,7 +8,6 @@
 #include <algorithm>
 #include <array>
 #include <cctype>
-#include <atomic>
 #include <csignal>
 #include <deque>
 #include <filesystem>
@@ -219,7 +218,7 @@ static const char* ADMIN_HTML = R"HTML(<!doctype html>
 
       <div class="form-group">
         <label for="fileName">Название файла (без расширения):</label>
-        <input type="text" id="fileName" placeholder="orange_chat_color">
+        <input type="text" id="fileName" placeholder="my_chat_plugin">
         <small style="color:#94a3b8;">Название можно изменить перед загрузкой — оно будет использовано для сохранения файла.</small>
       </div>
 
@@ -240,7 +239,7 @@ static const char* ADMIN_HTML = R"HTML(<!doctype html>
 
     <div class="form-group">
       <label for="cppCode">C++ код для сборки DLL:</label>
-      <textarea id="cppCode" placeholder="#include <string>\nextern \"C\" const char* chat_color() { return \"orange\"; }"></textarea>
+      <textarea id="cppCode" placeholder="#include <string>\nextern \"C\" const char* chat_color() { return \"blue\"; }"></textarea>
       <div style="display:flex; gap:12px; flex-wrap:wrap;">
         <button id="compileBtn">Собрать DLL из кода</button>
         <button id="clearCppBtn" type="button">Очистить</button>
@@ -377,9 +376,8 @@ async function updateDllStatus() {
     try {
         const response = await fetch('/dll_status');
         const data = await response.json();
-    const dllName = data.active || 'нет активной библиотеки';
-    const colorState = data.orange ? 'оранжевый цвет включен' : 'оранжевый цвет отключен';
-    dllInfoEl.textContent = `Активная библиотека: ${dllName}; ${colorState}. Активируйте DLL через чат: call <имя>. Веб-загрузка на порту 80, чат на порту 8080.`;
+        const dllName = data.active || 'нет активной библиотеки';
+        dllInfoEl.textContent = `Активная библиотека: ${dllName}. Активируйте DLL через чат: call <имя>. Веб-загрузка на порту 80, чат на порту 8080.`;
     } catch (error) {
         dllInfoEl.textContent = 'Не удалось получить статус DLL';
     }
@@ -477,16 +475,7 @@ struct SharedState {
     
     // DLL функционал
     mutable std::mutex dll_mutex;
-    std::atomic<bool> orange_color_enabled{false};
     std::string current_dll_name;
-    
-    void enable_orange_color(bool enabled) { 
-        orange_color_enabled.store(enabled); 
-    }
-    
-    bool is_orange_color_enabled() const { 
-        return orange_color_enabled.load(); 
-    }
     
     void set_current_dll(const std::string& dll_name) {
         std::lock_guard<std::mutex> lock(dll_mutex);
@@ -559,14 +548,7 @@ public:
     void send_text(const std::string& s) override {
         bool writing = !outbox_.empty();
 
-        // Применяем оранжевый цвет если DLL активна
-        std::string colored_message = s;
-        if (state_->is_orange_color_enabled() &&
-            (s.rfind("MSG:", 0) == 0 || s.rfind("FAV:", 0) == 0 || s.rfind("DM:", 0) == 0)) {
-            colored_message = "ORANGE:" + s;
-        }
-        
-        outbox_.push_back(colored_message);
+        outbox_.push_back(s);
         if (!writing) do_write();
     }
 
@@ -621,10 +603,6 @@ public:
 
     void send_text(const std::string& s) override {
         std::string payload = s;
-        if (state_->is_orange_color_enabled() &&
-            (s.rfind("MSG:", 0) == 0 || s.rfind("FAV:", 0) == 0 || s.rfind("DM:", 0) == 0)) {
-            payload = "ORANGE:" + s;
-        }
         if (payload.empty() || payload.back() != '\n') payload.push_back('\n');
         bool writing = !outbox_.empty();
         outbox_.push_back(payload);
@@ -836,8 +814,7 @@ void SharedState::process_line(const std::shared_ptr<SessionBase>& session, std:
         if (line == "#dll_status") {
             const auto current = get_current_dll();
             const std::string dll_info = current.empty() ? std::string("нет активной DLL") : current;
-            const std::string color_state = is_orange_color_enabled() ? "оранжевый цвет включен" : "оранжевый цвет выключен";
-            session->send_text("SYS: DLL: " + dll_info + "; " + color_state + ". Для активации используйте call <имя>");
+            session->send_text("SYS: DLL: " + dll_info + ". Для активации используйте call <имя>");
             return;
         }
 
@@ -869,7 +846,6 @@ void SharedState::process_line(const std::shared_ptr<SessionBase>& session, std:
                 return;
             }
 
-            enable_orange_color(true);
             set_current_dll(dll_path.filename().string());
             notify_dll_event("Библиотека '" + dll_path.filename().string() + "' активирована через чат");
             session->send_text("SYS: DLL активирована: " + dll_path.filename().string());
@@ -947,7 +923,7 @@ private:
         <h1>Web Chat</h1>
         <p>Используйте клиентское приложение для доступа к чату</p>
         <p>Текущие DLL модификации: )HTML";
-        status_html += (state_->is_orange_color_enabled() ? "Оранжевый цвет активен" : "Нет");
+        status_html += (state_->get_current_dll().empty() ? "Нет активной DLL" : state_->get_current_dll());
         status_html += R"HTML(</p>
         </body></html>)HTML";
 
@@ -1291,7 +1267,6 @@ private:
             fs::remove(dll_path);
 
             if (was_active) {
-                state_->enable_orange_color(false);
                 state_->set_current_dll("");
                 state_->notify_dll_event("Активная DLL удалена: " + dll_path.filename().string());
             }
@@ -1348,8 +1323,7 @@ private:
 
         const auto current = state_->get_current_dll();
         std::ostringstream body;
-        body << "{\"active\":\"" << current << "\",";
-        body << "\"orange\":" << (state_->is_orange_color_enabled() ? "true" : "false") << "}";
+        body << "{\"active\":\"" << current << "\"}";
         res->body() = body.str();
         res->prepare_payload();
         write_response(res);
