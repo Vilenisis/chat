@@ -238,15 +238,15 @@ static const char* ADMIN_HTML = R"HTML(<!doctype html>
         <small style="color:#94a3b8;">Код будет декодирован и сохранён как .dll в папке сервера.</small>
       </div>
 
-      <div class="form-group">
-        <label for="cppCode">Вставьте C++ код для сборки DLL:</label>
-        <textarea id="cppCode" placeholder="#include <windows.h>\nextern &quot;C&quot; __declspec(dllexport) void run() { /* ... */ }"></textarea>
-        <div style="display:flex; gap:12px; flex-wrap:wrap;">
-          <button id="compileBtn">Собрать DLL из кода</button>
-          <button id="clearCppBtn" type="button">Очистить код</button>
-        </div>
-        <small style="color:#94a3b8;">Код компилируется сервером через g++ в shared library c расширением .dll и сохраняется рядом с остальными библиотеками.</small>
+    <div class="form-group">
+      <label for="dllExample">Готовый пример DLL: личные сообщения в оранжевом цвете</label>
+      <textarea id="dllExample" readonly style="opacity:0.9;"></textarea>
+      <div style="display:flex; gap:12px; flex-wrap:wrap;">
+        <button id="copyExampleBtn" type="button">Скопировать пример</button>
+        <button id="applyExampleBtn" type="button">Заполнить поле загрузки</button>
       </div>
+      <small style="color:#94a3b8;">Этот готовый пример включает оранжевую окраску личных сообщений после активации через команду call.</small>
+    </div>
 
     <div class="status" id="dllInfo">
       Активная библиотека: нет данных. Порт веб-загрузки: 80, чат слушает порт 8080 (открывайте два терминальных клиента для проверки изменений).
@@ -390,7 +390,7 @@ function setStatus(text) {
 
 loadBtn.addEventListener('click', loadDll);
 document.getElementById('loadCodeBtn').addEventListener('click', async () => {
-    const code = document.getElementById('dllCode').value.trim();
+    const code = dllCodeEl.value.trim();
     const fileName = fileNameInput.value.trim();
     if (!code) { setStatus('Введите base64 код DLL'); return; }
     if (!fileName) { setStatus('Укажите имя файла'); return; }
@@ -414,7 +414,7 @@ document.getElementById('loadCodeBtn').addEventListener('click', async () => {
 });
 
 document.getElementById('clearCodeBtn').addEventListener('click', () => {
-    document.getElementById('dllCode').value = '';
+    dllCodeEl.value = '';
     setStatus('Поле с кодом очищено');
 });
 
