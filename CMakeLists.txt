@@ -17,12 +17,20 @@ set_target_properties(chat_core PROPERTIES
   WINDOWS_EXPORT_ALL_SYMBOLS TRUE
 )
 
+add_library(command_dll SHARED examples/command_dll.cpp)
+set_target_properties(command_dll PROPERTIES
+  WINDOWS_EXPORT_ALL_SYMBOLS TRUE
+)
+target_include_directories(command_dll PUBLIC examples)
+
 add_executable(server server.cpp)
 add_executable(client client.cpp)
 add_executable(server_web server_web.cpp)
 
 # Добавляем простой рабочий сервер
 add_executable(working_server working_server.cpp)
+add_executable(command_runner examples/command_runner.cpp)
+target_link_libraries(command_runner PRIVATE command_dll)
 
 set(_boost_header_target "")
 set(_boost_system_target "")
