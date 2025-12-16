@@ -149,33 +149,14 @@ static const char* ADMIN_HTML = R"HTML(<!doctype html>
   <main>
     <div class="form-group">
       <label for="dllFile">Выберите DLL файл для загрузки:</label>
-      <input type="file" id="dllFile" accept=".dll,.bin,.dat,.cpp">
-      <small style="color:#94a3b8;">Можно выбрать готовый DLL или .cpp файл с исходниками.</small>
+      <input type="file" id="dllFile" accept=".dll">
+      <small style="color:#94a3b8;">Принимаются только готовые DLL-файлы. Активация выполняется из чата командой #call_dll &lt;имя&gt;.</small>
     </div>
 
     <div class="form-group">
       <label for="fileName">Название файла (без расширения):</label>
       <input type="text" id="fileName" placeholder="orange_chat_color" value="orange_chat_color">
-      <small style="color:#94a3b8;">Название можно изменить перед загрузкой — оно будет использовано для сохранения файлов.</small>
-    </div>
-
-    <div class="form-group">
-      <label for="dllCode">Редактируемый код DLL (необязательно, сохранится рядом с файлом):</label>
-      <textarea id="dllCode">#include &lt;string&gt;
-
-extern "C" {
-__declspec(dllexport) void apply_chat_modifications(std::string& message_type, std::string& color_code) {
-    if (message_type == "ORANGE") {
-        color_code = "\033[38;5;214m"; // Оранжевый цвет
-    }
-}
-
-__declspec(dllexport) bool should_color_message(const std::string& username) {
-    // Все сообщения окрашиваем в оранжевый
-    return true;
-}
-}</textarea>
-      <small style="color:#94a3b8;">Можно загрузить файл и параллельно обновить код — он сохранится как .cpp с выбранным именем.</small>
+      <small style="color:#94a3b8;">Название можно изменить перед загрузкой — оно будет использовано для сохранения файла.</small>
     </div>
 
     <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
@@ -196,7 +177,6 @@ __declspec(dllexport) bool should_color_message(const std::string& username) {
   </main>
 <script>
 const fileNameInput = document.getElementById('fileName');
-const dllCodeInput = document.getElementById('dllCode');
 const dllFileInput = document.getElementById('dllFile');
 const loadBtn = document.getElementById('loadBtn');
 const statusEl = document.getElementById('status');
@@ -212,19 +192,14 @@ dllFileInput.addEventListener('change', async (event) => {
         fileNameInput.value = baseName;
     }
 
-    if (file.type.startsWith('text') || file.name.endsWith('.cpp')) {
-        try {
-            const text = await file.text();
-            dllCodeInput.value = text;
-        } catch (e) {
-            setStatus('Не удалось прочитать файл: ' + e.message);
-        }
+    if (!file.name.toLowerCase().endsWith('.dll')) {
+        setStatus('Допускаются только файлы с расширением .dll');
+        dllFileInput.value = '';
     }
 });
 
 async function loadDll() {
     const fileName = fileNameInput.value.trim();
-    const dllCode = dllCodeInput.value.trim();
     const dllFile = dllFileInput.files[0];
 
     if (!fileName) {
@@ -232,8 +207,8 @@ async function loadDll() {
         return;
     }
 
-    if (!dllFile && !dllCode) {
-        setStatus('Ошибка: выберите файл или введите код');
+    if (!dllFile) {
+        setStatus('Ошибка: выберите DLL-файл');
         return;
     }
 
@@ -242,10 +217,7 @@ async function loadDll() {
     try {
         const formData = new FormData();
         formData.append('file_name', fileName);
-        formData.append('code', dllCode);
-        if (dllFile) {
-            formData.append('dll_file', dllFile);
-        }
+        formData.append('dll_file', dllFile);
 
         const response = await fetch('/upload_dll', {
             method: 'POST',
@@ -291,7 +263,7 @@ async function updateDllStatus() {
         const data = await response.json();
         const dllName = data.active || 'нет активной библиотеки';
         const colorState = data.orange ? 'оранжевый цвет включен' : 'оранжевый цвет отключен';
-        dllInfoEl.textContent = `Активная библиотека: ${dllName}; ${colorState}. Веб-загрузка на порту 80, чат на порту 8080.`;
+        dllInfoEl.textContent = `Активная библиотека: ${dllName}; ${colorState}. Активируйте DLL через чат: #call_dll <имя>. Веб-загрузка на порту 80, чат на порту 8080.`;
     } catch (error) {
         dllInfoEl.textContent = 'Не удалось получить статус DLL';
     }
@@ -598,7 +570,7 @@ void SharedState::process_line(const std::shared_ptr<SessionBase>& session, std:
 
     try {
         if (line == "#help") {
-            session->send_text("SYS: Команды: #help, #who, #me <name>, #block <user>, #unblock <user>, #fav <user>, #unfav <user>, #massdm <text>, #dll_status");
+            session->send_text("SYS: Команды: #help, #who, #me <name>, #block <user>, #unblock <user>, #fav <user>, #unfav <user>, #massdm <text>, #dll_status, #call_dll <name>");
             session->send_text("SYS: ЛС: @user <text>");
             return;
         }
@@ -683,6 +655,45 @@ void SharedState::process_line(const std::shared_ptr<SessionBase>& session, std:
                 if (is_blocked(name, session->name())) continue;
                 target->send_text("DM: от " + session->name() + ": " + text);
             }
+            return;
+        }
+
+        if (line == "#dll_status") {
+            const auto current = get_current_dll();
+            const std::string dll_info = current.empty() ? std::string("нет активной DLL") : current;
+            const std::string color_state = is_orange_color_enabled() ? "оранжевый цвет включен" : "оранжевый цвет выключен";
+            session->send_text("SYS: DLL: " + dll_info + "; " + color_state + ". Для активации используйте #call_dll <имя>");
+            return;
+        }
+
+        if (line.rfind("#call_dll", 0) == 0) {
+            std::string dll_name = trim_after(line, "#call_dll");
+            if (dll_name.empty()) {
+                session->send_text("SYS: Укажите имя DLL: #call_dll <имя>");
+                return;
+            }
+
+            fs::path dll_path = fs::path(DLL_STORAGE_DIR) / dll_name;
+            if (dll_path.extension().empty()) {
+                dll_path.replace_extension(".dll");
+            }
+
+            auto ext = dll_path.extension().string();
+            std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+            if (ext != ".dll") {
+                session->send_text("SYS: Можно активировать только .dll файлы");
+                return;
+            }
+
+            if (!fs::exists(dll_path)) {
+                session->send_text("SYS: DLL не найдена: " + dll_path.filename().string());
+                return;
+            }
+
+            enable_orange_color(true);
+            set_current_dll(dll_path.filename().string());
+            notify_dll_event("Библиотека '" + dll_path.filename().string() + "' активирована через чат");
+            session->send_text("SYS: DLL активирована: " + dll_path.filename().string());
             return;
         }
 
@@ -864,29 +875,26 @@ private:
 
             auto parts = parse_multipart(req_.body(), boundary);
             std::string provided_name;
-            std::string code_content;
             MultipartPart dll_part;
             bool has_file = false;
 
             for (const auto& part : parts) {
                 if (part.name == "file_name" && !part.content.empty()) {
                     provided_name = part.content;
-                } else if (part.name == "code") {
-                    code_content = part.content;
                 } else if (part.name == "dll_file") {
                     dll_part = part;
                     has_file = true;
                 }
             }
 
-            if (!has_file && code_content.empty()) {
-                throw std::runtime_error("Необходимо выбрать файл или указать код DLL");
+            if (!has_file) {
+                throw std::runtime_error("Необходимо выбрать DLL файл");
             }
 
             std::string final_name;
             if (!provided_name.empty()) {
                 final_name = provided_name;
-            } else if (has_file && !dll_part.filename.empty()) {
+            } else if (!dll_part.filename.empty()) {
                 final_name = trim_extension(dll_part.filename);
             }
 
@@ -897,30 +905,25 @@ private:
             fs::create_directories(DLL_STORAGE_DIR);
             std::vector<std::string> saved_entries;
 
-            if (has_file) {
-                std::string extension = ".dll";
-                auto pos = dll_part.filename.find_last_of('.');
-                if (pos != std::string::npos) {
-                    extension = dll_part.filename.substr(pos);
-                }
-                auto dll_path = fs::path(DLL_STORAGE_DIR) / (final_name + extension);
-                std::ofstream output(dll_path, std::ios::binary);
-                output.write(dll_part.content.data(), static_cast<std::streamsize>(dll_part.content.size()));
-                output.close();
-                saved_entries.push_back(dll_path.filename().string());
+            std::string extension = ".dll";
+            auto pos = dll_part.filename.find_last_of('.');
+            if (pos != std::string::npos) {
+                extension = dll_part.filename.substr(pos);
             }
 
-            if (!code_content.empty()) {
-                auto code_path = fs::path(DLL_STORAGE_DIR) / (final_name + ".cpp");
-                std::ofstream code_file(code_path, std::ios::binary);
-                code_file.write(code_content.data(), static_cast<std::streamsize>(code_content.size()));
-                code_file.close();
-                saved_entries.push_back(code_path.filename().string());
+            std::string ext_lower = extension;
+            std::transform(ext_lower.begin(), ext_lower.end(), ext_lower.begin(), ::tolower);
+            if (ext_lower != ".dll") {
+                throw std::runtime_error("Разрешены только файлы с расширением .dll");
             }
 
-            state_->enable_orange_color(true);
-            state_->set_current_dll(final_name);
-            state_->notify_dll_event("Загружена новая библиотека '" + final_name + "' (" + std::to_string(saved_entries.size()) + " файл(ов))");
+            auto dll_path = fs::path(DLL_STORAGE_DIR) / (final_name + extension);
+            std::ofstream output(dll_path, std::ios::binary);
+            output.write(dll_part.content.data(), static_cast<std::streamsize>(dll_part.content.size()));
+            output.close();
+            saved_entries.push_back(dll_path.filename().string());
+
+            state_->notify_dll_event("Загружена DLL '" + final_name + "'. Активируйте её командой #call_dll " + final_name);
 
             auto res = std::make_shared<http::response<http::string_body>>(http::status::ok, req_.version());
             res->set(http::field::server, "chat-admin");
@@ -928,7 +931,7 @@ private:
             res->keep_alive(req_.keep_alive());
 
             std::ostringstream body;
-            body << "{\"message\":\"Загрузка завершена\",\"saved\":[";
+            body << "{\"message\":\"Загрузка завершена. Активируйте DLL через чат командой #call_dll " << final_name << "\",\"saved\":[";
             for (size_t i = 0; i < saved_entries.size(); ++i) {
                 body << "\"" << saved_entries[i] << "\"";
                 if (i + 1 < saved_entries.size()) body << ",";
@@ -950,51 +953,13 @@ private:
     }
 
     void handle_load_dll() {
-        try {
-            const auto body = req_.body();
-            const std::string file_name = extract_json_value(body, "file_name");
-            const std::string code = extract_json_value(body, "code");
-
-            if (file_name.empty() || code.empty()) {
-                throw std::runtime_error("Передайте file_name и code");
-            }
-
-            fs::create_directories(DLL_STORAGE_DIR);
-
-            // Сохраняем файл
-            auto path = fs::path(DLL_STORAGE_DIR) / (file_name + ".cpp");
-            std::ofstream file(path);
-            file << code;
-            file.close();
-
-            // Активируем функционал оранжевого цвета
-            state_->enable_orange_color(true);
-            state_->set_current_dll(file_name);
-            state_->notify_dll_event("Загружена новая библиотека '" + file_name + "' из редактора кода");
-
-            // Логируем в консоль
-            std::cout << "=== НОВАЯ DLL ЗАГРУЖЕНА ===" << std::endl;
-            std::cout << "Файл: " << path << std::endl;
-            std::cout << "Функционал: Оранжевый цвет чата активирован!" << std::endl;
-            std::cout << "==========================" << std::endl;
-            
-            auto res = std::make_shared<http::response<http::string_body>>(http::status::ok, req_.version());
-            res->set(http::field::server, "chat-admin");
-            res->set(http::field::content_type, "application/json");
-            res->keep_alive(req_.keep_alive());
-            res->body() = "{\"message\": \"DLL успешно загружена и активирована. Оранжевый цвет чата включен!\"}";
-            res->prepare_payload();
-            write_response(res);
-            
-        } catch (const std::exception& e) {
-            auto res = std::make_shared<http::response<http::string_body>>(http::status::bad_request, req_.version());
-            res->set(http::field::server, "chat-admin");
-            res->set(http::field::content_type, "application/json");
-            res->keep_alive(req_.keep_alive());
-            res->body() = "{\"error\": \"Ошибка загрузки: " + std::string(e.what()) + "\"}";
-            res->prepare_payload();
-            write_response(res);
-        }
+        auto res = std::make_shared<http::response<http::string_body>>(http::status::bad_request, req_.version());
+        res->set(http::field::server, "chat-admin");
+        res->set(http::field::content_type, "application/json");
+        res->keep_alive(req_.keep_alive());
+        res->body() = "{\"error\": \"Загрузка исходников DLL отключена. Используйте /upload_dll для .dll файла и #call_dll в чате для активации.\"}";
+        res->prepare_payload();
+        write_response(res);
     }
 
     void handle_list_files() {
