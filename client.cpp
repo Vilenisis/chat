@@ -74,7 +74,6 @@ using namespace std;
 static const char* COL_DM  = "\033[32m"; // зелёный
 static const char* COL_SYS = "\033[36m"; // циан
 static const char* COL_FAV = "\033[33m"; // жёлтый
-static const char* COL_ORANGE = "\033[38;5;214m"; // оранжевый
 static const char* COL_RST = "\033[0m";
 
 int main(int argc, char** argv) {
@@ -111,6 +110,11 @@ int main(int argc, char** argv) {
                 getline(is, line);
                 cout << "Received: " << line << endl; // Лог полученного сообщения
 
+                // Игнорируем устаревший префикс ORANGE:, если он вдруг пришёл с сервера
+                if (line.rfind("ORANGE:", 0) == 0) {
+                    line = line.substr(7);
+                }
+
                 // Если это DM/MSG/FAV — замаскируем только часть после последнего ": "
                 auto needs_mask = (line.rfind("DM:", 0) == 0) || (line.rfind("MSG:", 0) == 0) || (line.rfind("FAV:", 0) == 0);
                 if (needs_mask) {
@@ -122,12 +126,8 @@ int main(int argc, char** argv) {
                     }
                 }
 
-                // подсветка типов с поддержкой оранжевого цвета
-                if (line.rfind("ORANGE:", 0) == 0) {
-                    // Убираем префикс ORANGE: для отображения
-                    std::string display_line = line.substr(7);
-                    cout << COL_ORANGE << display_line << COL_RST << "\n";
-                } else if (line.rfind("DM:", 0) == 0) {
+                // подсветка типов
+                if (line.rfind("DM:", 0) == 0) {
                     cout << COL_DM << line << COL_RST << "\n";
                 } else if (line.rfind("SYS:", 0) == 0) {
                     cout << COL_SYS << line << COL_RST << "\n";
