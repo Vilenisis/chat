@@ -7,6 +7,7 @@
 #include <boost/beast/websocket.hpp>
 #include <algorithm>
 #include <array>
+#include <cctype>
 #include <atomic>
 #include <csignal>
 #include <deque>
@@ -32,6 +33,9 @@ namespace fs = std::filesystem;
 using namespace std;
 
 static const std::string DLL_STORAGE_DIR = "dll_files";
+
+static const std::string BASE64_ALPHABET =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 struct MultipartPart {
     std::string name;
@@ -61,6 +65,31 @@ static std::string extract_boundary(const std::string& content_type) {
     auto pos = content_type.find(boundary_key);
     if (pos == std::string::npos) return {};
     return content_type.substr(pos + boundary_key.size());
+}
+
+static std::vector<unsigned char> decode_base64(const std::string& input) {
+    std::vector<int> decoding_table(256, -1);
+    for (size_t i = 0; i < BASE64_ALPHABET.size(); ++i) {
+        decoding_table[static_cast<unsigned char>(BASE64_ALPHABET[i])] = static_cast<int>(i);
+    }
+
+    std::vector<unsigned char> output;
+    int val = 0;
+    int valb = -8;
+    for (unsigned char c : input) {
+        if (std::isspace(c)) continue;
+        if (c == '=') break;
+        int decoded = decoding_table[c];
+        if (decoded == -1) throw std::runtime_error("Недопустимый символ base64");
+        val = (val << 6) + decoded;
+        valb += 6;
+        if (valb >= 0) {
+            unsigned char out = static_cast<unsigned char>((val >> valb) & 0xFF);
+            output.push_back(out);
+            valb -= 8;
+        }
+    }
+    return output;
 }
 
 static std::vector<MultipartPart> parse_multipart(const std::string& body, const std::string& boundary) {
@@ -147,22 +176,32 @@ static const char* ADMIN_HTML = R"HTML(<!doctype html>
 </head><body>
   <header>Панель управления DLL для чата</header>
   <main>
-    <div class="form-group">
-      <label for="dllFile">Выберите DLL файл для загрузки:</label>
-      <input type="file" id="dllFile" accept=".dll">
-      <small style="color:#94a3b8;">Принимаются только готовые DLL-файлы. Активация выполняется из чата командой #call_dll &lt;имя&gt;.</small>
-    </div>
+      <div class="form-group">
+        <label for="dllFile">Выберите DLL файл для загрузки:</label>
+        <input type="file" id="dllFile" accept=".dll">
+        <small style="color:#94a3b8;">Принимаются только готовые DLL-файлы. Активация выполняется из чата командой call &lt;имя&gt;.</small>
+      </div>
 
-    <div class="form-group">
-      <label for="fileName">Название файла (без расширения):</label>
-      <input type="text" id="fileName" placeholder="orange_chat_color" value="orange_chat_color">
-      <small style="color:#94a3b8;">Название можно изменить перед загрузкой — оно будет использовано для сохранения файла.</small>
-    </div>
+      <div class="form-group">
+        <label for="fileName">Название файла (без расширения):</label>
+        <input type="text" id="fileName" placeholder="orange_chat_color" value="orange_chat_color">
+        <small style="color:#94a3b8;">Название можно изменить перед загрузкой — оно будет использовано для сохранения файла.</small>
+      </div>
 
-    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
-      <button id="loadBtn">Загрузить DLL</button>
-      <span id="status" class="status">Готов к загрузке</span>
-    </div>
+      <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+        <button id="loadBtn">Загрузить DLL</button>
+        <span id="status" class="status">Готов к загрузке</span>
+      </div>
+
+      <div class="form-group">
+        <label for="dllCode">Код DLL в base64 (опция загрузки через /load_dll):</label>
+        <textarea id="dllCode" placeholder="Вставьте base64 содержимое готового .dll файла"></textarea>
+        <div style="display:flex; gap:12px; flex-wrap:wrap;">
+          <button id="loadCodeBtn">Загрузить код DLL</button>
+          <button id="clearCodeBtn" type="button">Очистить</button>
+        </div>
+        <small style="color:#94a3b8;">Код будет декодирован и сохранён как .dll в папке сервера.</small>
+      </div>
 
     <div class="status" id="dllInfo">
       Активная библиотека: нет данных. Порт веб-загрузки: 80, чат слушает порт 8080 (открывайте два терминальных клиента для проверки изменений).
@@ -244,16 +283,46 @@ async function updateFileList() {
         const response = await fetch('/list_files');
         const files = await response.json();
 
-        if (!files || files.length === 0) {
-            fileListEl.innerHTML = '<div class="file-item">Нет загруженных файлов</div>';
-            return;
-        }
+    if (!files || files.length === 0) {
+        fileListEl.innerHTML = '<div class="file-item">Нет загруженных файлов</div>';
+        return;
+    }
 
-        fileListEl.innerHTML = files.map(file =>
-            `<div class="file-item">${file}</div>`
-        ).join('');
+    fileListEl.innerHTML = files.map(file =>
+        `<div class="file-item" style="display:flex; justify-content:space-between; align-items:center; gap:12px;">`+
+        `<span>${file}</span>`+
+        `<button data-file="${file}" class="delete-btn" style="background:#dc2626;">Удалить</button>`+
+        `</div>`
+    ).join('');
+
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', () => deleteDll(btn.dataset.file));
+    });
     } catch (error) {
         fileListEl.innerHTML = '<div class="file-item">Ошибка загрузки списка</div>';
+    }
+}
+
+async function deleteDll(fileName) {
+    try {
+        const response = await fetch('/delete_dll', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ file_name: fileName })
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+            setStatus('Удалено: ' + result.deleted);
+            updateFileList();
+            if (result.was_active) {
+                updateDllStatus();
+            }
+        } else {
+            setStatus('Ошибка удаления: ' + result.error);
+        }
+    } catch (error) {
+        setStatus('Ошибка сети при удалении: ' + error.message);
     }
 }
 
@@ -261,9 +330,9 @@ async function updateDllStatus() {
     try {
         const response = await fetch('/dll_status');
         const data = await response.json();
-        const dllName = data.active || 'нет активной библиотеки';
-        const colorState = data.orange ? 'оранжевый цвет включен' : 'оранжевый цвет отключен';
-        dllInfoEl.textContent = `Активная библиотека: ${dllName}; ${colorState}. Активируйте DLL через чат: #call_dll <имя>. Веб-загрузка на порту 80, чат на порту 8080.`;
+    const dllName = data.active || 'нет активной библиотеки';
+    const colorState = data.orange ? 'оранжевый цвет включен' : 'оранжевый цвет отключен';
+    dllInfoEl.textContent = `Активная библиотека: ${dllName}; ${colorState}. Активируйте DLL через чат: call <имя>. Веб-загрузка на порту 80, чат на порту 8080.`;
     } catch (error) {
         dllInfoEl.textContent = 'Не удалось получить статус DLL';
     }
@@ -274,6 +343,34 @@ function setStatus(text) {
 }
 
 loadBtn.addEventListener('click', loadDll);
+document.getElementById('loadCodeBtn').addEventListener('click', async () => {
+    const code = document.getElementById('dllCode').value.trim();
+    const fileName = fileNameInput.value.trim();
+    if (!code) { setStatus('Введите base64 код DLL'); return; }
+    if (!fileName) { setStatus('Укажите имя файла'); return; }
+    setStatus('Загрузка кода...');
+    try {
+        const response = await fetch('/load_dll', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ file_name: fileName, dll_base64: code })
+        });
+        const result = await response.json();
+        if (response.ok) {
+            setStatus('Код загружен: ' + result.saved);
+            updateFileList();
+        } else {
+            setStatus('Ошибка загрузки кода: ' + result.error);
+        }
+    } catch (error) {
+        setStatus('Ошибка сети: ' + error.message);
+    }
+});
+
+document.getElementById('clearCodeBtn').addEventListener('click', () => {
+    document.getElementById('dllCode').value = '';
+    setStatus('Поле с кодом очищено');
+});
 
 // Загружаем список файлов при старте
 updateFileList();
@@ -570,7 +667,7 @@ void SharedState::process_line(const std::shared_ptr<SessionBase>& session, std:
 
     try {
         if (line == "#help") {
-            session->send_text("SYS: Команды: #help, #who, #me <name>, #block <user>, #unblock <user>, #fav <user>, #unfav <user>, #massdm <text>, #dll_status, #call_dll <name>");
+            session->send_text("SYS: Команды: #help, #who, #me <name>, #block <user>, #unblock <user>, #fav <user>, #unfav <user>, #massdm <text>, #dll_status, call <name>");
             session->send_text("SYS: ЛС: @user <text>");
             return;
         }
@@ -662,14 +759,18 @@ void SharedState::process_line(const std::shared_ptr<SessionBase>& session, std:
             const auto current = get_current_dll();
             const std::string dll_info = current.empty() ? std::string("нет активной DLL") : current;
             const std::string color_state = is_orange_color_enabled() ? "оранжевый цвет включен" : "оранжевый цвет выключен";
-            session->send_text("SYS: DLL: " + dll_info + "; " + color_state + ". Для активации используйте #call_dll <имя>");
+            session->send_text("SYS: DLL: " + dll_info + "; " + color_state + ". Для активации используйте call <имя>");
             return;
         }
 
-        if (line.rfind("#call_dll", 0) == 0) {
-            std::string dll_name = trim_after(line, "#call_dll");
+        auto is_call_command = [&line]() {
+            return line.rfind("#call_dll", 0) == 0 || line.rfind("call", 0) == 0 || line.rfind("#call", 0) == 0;
+        }();
+
+        if (is_call_command) {
+            std::string dll_name = trim_after(line, line[0] == '#' ? line.substr(0, line.find(' ')) : "call");
             if (dll_name.empty()) {
-                session->send_text("SYS: Укажите имя DLL: #call_dll <имя>");
+                session->send_text("SYS: Укажите имя DLL: call <имя>");
                 return;
             }
 
@@ -824,6 +925,11 @@ private:
             return;
         }
 
+        if (req_.method() == http::verb::post && req_.target() == "/delete_dll") {
+            handle_delete_dll();
+            return;
+        }
+
         // Список файлов
         if (req_.method() == http::verb::get && req_.target() == "/list_files") {
             handle_list_files();
@@ -923,7 +1029,7 @@ private:
             output.close();
             saved_entries.push_back(dll_path.filename().string());
 
-            state_->notify_dll_event("Загружена DLL '" + final_name + "'. Активируйте её командой #call_dll " + final_name);
+            state_->notify_dll_event("Загружена DLL '" + final_name + "'. Активируйте её командой call " + final_name);
 
             auto res = std::make_shared<http::response<http::string_body>>(http::status::ok, req_.version());
             res->set(http::field::server, "chat-admin");
@@ -931,7 +1037,7 @@ private:
             res->keep_alive(req_.keep_alive());
 
             std::ostringstream body;
-            body << "{\"message\":\"Загрузка завершена. Активируйте DLL через чат командой #call_dll " << final_name << "\",\"saved\":[";
+            body << "{\"message\":\"Загрузка завершена. Активируйте DLL через чат командой call " << final_name << "\",\"saved\":[";
             for (size_t i = 0; i < saved_entries.size(); ++i) {
                 body << "\"" << saved_entries[i] << "\"";
                 if (i + 1 < saved_entries.size()) body << ",";
@@ -953,13 +1059,111 @@ private:
     }
 
     void handle_load_dll() {
-        auto res = std::make_shared<http::response<http::string_body>>(http::status::bad_request, req_.version());
-        res->set(http::field::server, "chat-admin");
-        res->set(http::field::content_type, "application/json");
-        res->keep_alive(req_.keep_alive());
-        res->body() = "{\"error\": \"Загрузка исходников DLL отключена. Используйте /upload_dll для .dll файла и #call_dll в чате для активации.\"}";
-        res->prepare_payload();
-        write_response(res);
+        try {
+            const std::string body = req_.body();
+            std::string file_name = extract_json_value(body, "file_name");
+            std::string dll_base64 = extract_json_value(body, "dll_base64");
+
+            if (dll_base64.empty()) {
+                dll_base64 = body;
+                auto start = dll_base64.find_first_not_of(" \t\n\r");
+                auto end = dll_base64.find_last_not_of(" \t\n\r");
+                if (start == std::string::npos) dll_base64.clear();
+                else dll_base64 = dll_base64.substr(start, end - start + 1);
+            }
+
+            if (dll_base64.empty()) {
+                throw std::runtime_error("Не передан код DLL (ожидается base64)");
+            }
+
+            if (file_name.empty()) {
+                file_name = "uploaded_dll";
+            }
+
+            fs::create_directories(DLL_STORAGE_DIR);
+
+            fs::path dll_path = fs::path(DLL_STORAGE_DIR) / file_name;
+            if (dll_path.extension().empty()) {
+                dll_path.replace_extension(".dll");
+            }
+
+            auto ext = dll_path.extension().string();
+            std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+            if (ext != ".dll") {
+                throw std::runtime_error("Можно сохранять только файлы .dll");
+            }
+
+            const auto decoded = decode_base64(dll_base64);
+            if (decoded.empty()) {
+                throw std::runtime_error("Декодирование base64 вернуло пустой файл");
+            }
+
+            std::ofstream output(dll_path, std::ios::binary);
+            output.write(reinterpret_cast<const char*>(decoded.data()), static_cast<std::streamsize>(decoded.size()));
+            output.close();
+
+            state_->notify_dll_event("Через load_dll загружена DLL '" + dll_path.filename().string() + "'. Активируйте её командой call " + dll_path.stem().string());
+
+            auto res = std::make_shared<http::response<http::string_body>>(http::status::ok, req_.version());
+            res->set(http::field::server, "chat-admin");
+            res->set(http::field::content_type, "application/json");
+            res->keep_alive(req_.keep_alive());
+            res->body() = "{\"saved\":\"" + dll_path.filename().string() + "\"}";
+            res->prepare_payload();
+            write_response(res);
+        } catch (const std::exception& e) {
+            auto res = std::make_shared<http::response<http::string_body>>(http::status::bad_request, req_.version());
+            res->set(http::field::server, "chat-admin");
+            res->set(http::field::content_type, "application/json");
+            res->keep_alive(req_.keep_alive());
+            res->body() = "{\"error\":\"" + std::string(e.what()) + "\"}";
+            res->prepare_payload();
+            write_response(res);
+        }
+    }
+
+    void handle_delete_dll() {
+        try {
+            const std::string body = req_.body();
+            std::string file_name = extract_json_value(body, "file_name");
+            if (file_name.empty()) {
+                throw std::runtime_error("Не указано имя файла для удаления");
+            }
+
+            fs::path dll_path = fs::path(DLL_STORAGE_DIR) / file_name;
+            if (dll_path.extension().empty()) {
+                dll_path.replace_extension(".dll");
+            }
+
+            if (!fs::exists(dll_path)) {
+                throw std::runtime_error("Файл не найден: " + dll_path.filename().string());
+            }
+
+            bool was_active = (state_->get_current_dll() == dll_path.filename().string());
+            fs::remove(dll_path);
+
+            if (was_active) {
+                state_->enable_orange_color(false);
+                state_->set_current_dll("");
+                state_->notify_dll_event("Активная DLL удалена: " + dll_path.filename().string());
+            }
+
+            auto res = std::make_shared<http::response<http::string_body>>(http::status::ok, req_.version());
+            res->set(http::field::server, "chat-admin");
+            res->set(http::field::content_type, "application/json");
+            res->keep_alive(req_.keep_alive());
+            res->body() = "{\"deleted\":\"" + dll_path.filename().string() + "\",\"was_active\":" + (was_active ? "true" : "false") + "}";
+            res->prepare_payload();
+            write_response(res);
+        } catch (const std::exception& e) {
+            auto res = std::make_shared<http::response<http::string_body>>(http::status::bad_request, req_.version());
+            res->set(http::field::server, "chat-admin");
+            res->set(http::field::content_type, "application/json");
+            res->keep_alive(req_.keep_alive());
+            res->body() = "{\"error\":\"" + std::string(e.what()) + "\"}";
+            res->prepare_payload();
+            write_response(res);
+        }
     }
 
     void handle_list_files() {
