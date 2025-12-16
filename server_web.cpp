@@ -67,16 +67,62 @@ static std::string sanitize_filename(std::string s, const std::string& fallback 
     return out;
 }
 
-static std::string extract_json_value(const std::string& body, const std::string& key) {
-    const std::string pattern = "\"" + key + "\"";
-    auto pos = body.find(pattern);
-    if (pos == std::string::npos) return {};
-    pos = body.find('"', pos + pattern.size());
-    if (pos == std::string::npos) return {};
-    auto end = body.find('"', pos + 1);
-    if (end == std::string::npos || end <= pos + 1) return {};
-    return body.substr(pos + 1, end - pos - 1);
+static std::string json_unescape(const std::string& s) {
+    std::string out;
+    out.reserve(s.size());
+    for (size_t i = 0; i < s.size(); ++i) {
+        char c = s[i];
+        if (c != '\\') { out.push_back(c); continue; }
+        if (i + 1 >= s.size()) break;
+        char n = s[++i];
+        switch (n) {
+            case 'n': out.push_back('\n'); break;
+            case 'r': out.push_back('\r'); break;
+            case 't': out.push_back('\t'); break;
+            case '\\': out.push_back('\\'); break;
+            case '"': out.push_back('"'); break;
+            case 'b': out.push_back('\b'); break;
+            case 'f': out.push_back('\f'); break;
+            // \uXXXX можно добавить позже, пока не нужно
+            default: out.push_back(n); break;
+        }
+    }
+    return out;
 }
+
+std::string extract_json_value(const std::string& body, const std::string& key) {
+    const std::string pattern = "\"" + key + "\"";
+    size_t pos = body.find(pattern);
+    if (pos == std::string::npos) return {};
+
+    pos = body.find(':', pos + pattern.size());
+    if (pos == std::string::npos) return {};
+    ++pos;
+
+    while (pos < body.size() && (body[pos] == ' ' || body[pos] == '\t' || body[pos] == '\r' || body[pos] == '\n')) ++pos;
+    if (pos >= body.size() || body[pos] != '"') return {};
+    ++pos;
+
+    std::string raw;
+    raw.reserve(1024);
+
+    bool escape = false;
+    for (; pos < body.size(); ++pos) {
+        char c = body[pos];
+        if (!escape) {
+            if (c == '\\') { escape = true; raw.push_back(c); continue; }
+            if (c == '"') break;
+            raw.push_back(c);
+        } else {
+            // сохраняем как есть, потом json_unescape разрулит
+            raw.push_back(c);
+            escape = false;
+        }
+    }
+
+    return json_unescape(raw);
+}
+
 
 static std::string extract_boundary(const std::string& content_type) {
     const std::string boundary_key = "boundary=";
@@ -1321,13 +1367,15 @@ private:
             }
 
 #ifdef __APPLE__
-            std::string command =
-                "g++ -std=c++17 -O2 -dynamiclib "
-                "-fvisibility=default "
-                "-Wl,-exported_symbol,_chat_transform "
-                "-o \"" + dll_path.string() + "\" \"" + temp_cpp.string() + "\" 2>&1";
+std::string command =
+    "g++ -std=c++17 -O2 -dynamiclib "
+    "-fvisibility=default "
+    "-Wl,-exported_symbol,_chat_transform "
+    "-o \"" + dll_path.string() + "\" \"" + temp_cpp.string() + "\" 2>&1";
 #else
-            std::string command = "g++ -std=c++17 -shared -fPIC -O2 -o \"" + dll_path.string() + "\" \"" + temp_cpp.string() + "\" 2>&1";
+std::string command =
+    "g++ -std=c++17 -O2 -shared -fPIC "
+    "-o \"" + dll_path.string() + "\" \"" + temp_cpp.string() + "\" 2>&1";
 #endif
             auto [exit_code, output] = run_command_capture(command);
             fs::remove(temp_cpp);
