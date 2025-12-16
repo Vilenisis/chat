@@ -526,14 +526,27 @@ struct SharedState {
         auto fn = dll_transform;
         auto active = dll_handle;
         if (!fn || !active) return text;
-        const char* result = nullptr;
+
+        const char* result_cstr = nullptr;
         try {
-            result = fn(from.c_str(), text.c_str());
+            result_cstr = fn(from.c_str(), text.c_str());
         } catch (...) {
             return text;
         }
-        if (!result) return text;
-        return std::string(result);
+        if (!result_cstr) return text;
+
+        std::string result;
+        try {
+            result = std::string(result_cstr);
+        } catch (...) {
+            return text;
+        }
+
+        // Если DLL вернула усечённую строку, оставляем оригинальный текст,
+        // чтобы сообщения всегда доходили полностью.
+        if (result.size() < text.size()) return text;
+
+        return result;
     }
 
     void notify_dll_event(const std::string& message);
