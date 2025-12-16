@@ -219,7 +219,7 @@ static const char* ADMIN_HTML = R"HTML(<!doctype html>
 
       <div class="form-group">
         <label for="fileName">Название файла (без расширения):</label>
-        <input type="text" id="fileName" placeholder="orange_chat_color" value="orange_chat_color">
+        <input type="text" id="fileName" placeholder="orange_chat_color">
         <small style="color:#94a3b8;">Название можно изменить перед загрузкой — оно будет использовано для сохранения файла.</small>
       </div>
 
@@ -248,16 +248,6 @@ static const char* ADMIN_HTML = R"HTML(<!doctype html>
       <small style="color:#94a3b8;">Код будет скомпилирован в DLL и сохранён на сервере. Активируйте её в чате командой call &lt;имя&gt;.</small>
     </div>
 
-    <div class="form-group">
-      <label for="dllExample">Готовый пример DLL: личные сообщения в оранжевом цвете</label>
-      <textarea id="dllExample" readonly style="opacity:0.9;"></textarea>
-      <div style="display:flex; gap:12px; flex-wrap:wrap;">
-        <button id="copyExampleBtn" type="button">Скопировать пример</button>
-        <button id="applyExampleBtn" type="button">Заполнить поле загрузки</button>
-      </div>
-      <small style="color:#94a3b8;">Этот готовый пример включает оранжевую окраску личных сообщений после активации через команду call.</small>
-    </div>
-
     <div class="status" id="dllInfo">
       Активная библиотека: нет данных. Порт веб-загрузки: 80, чат слушает порт 8080 (открывайте два терминальных клиента для проверки изменений).
     </div>
@@ -277,22 +267,7 @@ const statusEl = document.getElementById('status');
 const fileListEl = document.getElementById('fileList');
 const dllInfoEl = document.getElementById('dllInfo');
 const dllCodeEl = document.getElementById('dllCode');
-const dllExampleEl = document.getElementById('dllExample');
 const cppCodeInput = document.getElementById('cppCode');
-
-const exampleDllBase64 = 'TVpUaGlzIGlzIGEgcGxhY2Vob2xkZXIgRExMIGZvciB1cGxvYWQgdGVzdGluZyBwdXJwb3NlcyBvbmx5Lg==';
-const exampleCppCode = `#include <string>
-
-extern "C" const char* message_prefix() {
-    return "[orange dll] ";
-}
-
-extern "C" const char* chat_color() {
-    return "orange";
-}`;
-
-dllExampleEl.value = exampleDllBase64;
-cppCodeInput.value = exampleCppCode;
 
 dllFileInput.addEventListener('change', async (event) => {
     const file = event.target.files[0];
@@ -442,22 +417,6 @@ document.getElementById('loadCodeBtn').addEventListener('click', async () => {
 document.getElementById('clearCodeBtn').addEventListener('click', () => {
     dllCodeEl.value = '';
     setStatus('Поле с кодом очищено');
-});
-
-document.getElementById('copyExampleBtn').addEventListener('click', async () => {
-    const text = dllExampleEl.value.trim();
-    if (!text) { setStatus('Пример пуст'); return; }
-    try {
-        await (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject());
-        setStatus('Пример скопирован в буфер обмена');
-    } catch (error) {
-        setStatus('Не удалось скопировать пример');
-    }
-});
-
-document.getElementById('applyExampleBtn').addEventListener('click', () => {
-    dllCodeEl.value = dllExampleEl.value;
-    setStatus('Пример добавлен в поле загрузки');
 });
 
 document.getElementById('compileBtn').addEventListener('click', async () => {
