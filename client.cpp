@@ -3,69 +3,6 @@
 #include <thread>
 #include <atomic>
 #include <string>
-#include <sstream>
-
-#include <vector>
-#include <cctype>
-
-
-
-
-// Разбивка UTF-8 на "символы" (кодпоинты), чтобы не резать кириллицу по байтам
-static std::vector<std::string> utf8_chars(const std::string& s) {
-    std::vector<std::string> out;
-    for (size_t i = 0; i < s.size();) {
-        unsigned char c = static_cast<unsigned char>(s[i]);
-        size_t len = 1;
-        if      ((c & 0x80) == 0x00) len = 1;
-        else if ((c & 0xE0) == 0xC0) len = 2;
-        else if ((c & 0xF0) == 0xE0) len = 3;
-        else if ((c & 0xF8) == 0xF0) len = 4;
-        // защитимся от кривых байтов
-        if (i + len > s.size()) len = 1;
-        out.emplace_back(s.substr(i, len));
-        i += len;
-    }
-    return out;
-}
-
-static bool is_ascii_punct(char c) {
-    // Хотим сохранить примыкающую пунктуацию (.,!?… и т.п.)
-    const std::string p = ".,!?;:()[]{}\"'«»…";
-    return p.find(c) != std::string::npos;
-}
-
-// Маскируем одно "слово": первые 2 + последние 2 символа, остальное выкидываем
-static std::string transform_token(const std::string& tok) {
-    // отделим ASCII-пунктуацию по краям, чтобы не искажать её
-    size_t start = 0, end = tok.size();
-    while (start < end && is_ascii_punct(tok[start])) start++;
-    while (end > start && is_ascii_punct(tok[end - 1])) end--;
-
-    std::string lead  = tok.substr(0, start);
-    std::string core  = tok.substr(start, end - start);
-    std::string trail = tok.substr(end);
-
-    auto chars = utf8_chars(core);
-    if (chars.size() <= 4) return tok; // короткие слова оставляем как есть
-
-    std::string out = chars[0] + chars[1] + chars[chars.size() - 2] + chars.back();
-    return lead + out + trail;
-}
-
-// Маскируем весь текст сообщения (разбиваем по пробелам, собираем обратно одним пробелом)
-static std::string mask_message(const std::string& msg) {
-    std::istringstream iss(msg);
-    std::string tok;
-    std::vector<std::string> parts;
-    while (iss >> tok) parts.push_back(transform_token(tok));
-    std::string out;
-    for (size_t i = 0; i < parts.size(); ++i) {
-        if (i) out.push_back(' ');
-        out += parts[i];
-    }
-    return out;
-}
 
 using boost::asio::ip::tcp;
 using namespace std;
@@ -113,17 +50,6 @@ int main(int argc, char** argv) {
                 // Игнорируем устаревший префикс ORANGE:, если он вдруг пришёл с сервера
                 if (line.rfind("ORANGE:", 0) == 0) {
                     line = line.substr(7);
-                }
-
-                // Если это DM/MSG/FAV — замаскируем только часть после последнего ": "
-                auto needs_mask = (line.rfind("DM:", 0) == 0) || (line.rfind("MSG:", 0) == 0) || (line.rfind("FAV:", 0) == 0);
-                if (needs_mask) {
-                    size_t sep = line.rfind(": ");
-                    if (sep != std::string::npos && sep + 2 < line.size()) {
-                        std::string header = line.substr(0, sep + 2);  // включает ": "
-                        std::string body   = line.substr(sep + 2);
-                        line = header + mask_message(body);
-                    }
                 }
 
                 // подсветка типов

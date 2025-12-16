@@ -13,6 +13,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <dlfcn.h>
 #include <memory>
 #include <mutex>
 #include <sstream>
@@ -476,15 +477,63 @@ struct SharedState {
     // DLL функционал
     mutable std::mutex dll_mutex;
     std::string current_dll_name;
-    
+    void* dll_handle = nullptr;
+    using transform_fn = const char* (*)(const char*, const char*);
+    transform_fn dll_transform = nullptr;
+
     void set_current_dll(const std::string& dll_name) {
         std::lock_guard<std::mutex> lock(dll_mutex);
         current_dll_name = dll_name;
     }
-    
+
     std::string get_current_dll() const {
         std::lock_guard<std::mutex> lock(dll_mutex);
         return current_dll_name;
+    }
+
+    bool load_dll(const fs::path& dll_path, std::string& error) {
+        std::lock_guard<std::mutex> lock(dll_mutex);
+        if (dll_handle) {
+            dlclose(dll_handle);
+            dll_handle = nullptr;
+            dll_transform = nullptr;
+        }
+
+        dll_handle = dlopen(dll_path.c_str(), RTLD_NOW);
+        if (!dll_handle) {
+            error = std::string("Не удалось загрузить DLL: ") + dlerror();
+            return false;
+        }
+
+        dlerror(); // сброс
+        dll_transform = reinterpret_cast<transform_fn>(dlsym(dll_handle, "chat_transform"));
+        current_dll_name = dll_path.filename().string();
+        return true;
+    }
+
+    void unload_dll_if_active(const std::string& dll_name) {
+        std::lock_guard<std::mutex> lock(dll_mutex);
+        if (!dll_handle) return;
+        if (!current_dll_name.empty() && current_dll_name != dll_name) return;
+        dlclose(dll_handle);
+        dll_handle = nullptr;
+        dll_transform = nullptr;
+        current_dll_name.clear();
+    }
+
+    std::string apply_dll_transform(const std::string& from, const std::string& text) {
+        std::lock_guard<std::mutex> lock(dll_mutex);
+        auto fn = dll_transform;
+        auto active = dll_handle;
+        if (!fn || !active) return text;
+        const char* result = nullptr;
+        try {
+            result = fn(from.c_str(), text.c_str());
+        } catch (...) {
+            return text;
+        }
+        if (!result) return text;
+        return std::string(result);
     }
 
     void notify_dll_event(const std::string& message);
@@ -689,8 +738,9 @@ void SharedState::broadcast_public(const std::string& from, const std::string& t
             auto s = it->second.lock();
             if (!s) continue;
             if (is_blocked(name, from)) continue;
+            const std::string transformed = apply_dll_transform(from, text);
             bool fav = favorites[name].count(from);
-            std::string payload = (fav ? "FAV: " : "MSG: ") + from + ": " + text;
+            std::string payload = (fav ? "FAV: " : "MSG: ") + from + ": " + transformed;
             s->send_text(payload);
         }
     } catch (const std::exception& e) {
@@ -703,7 +753,8 @@ void SharedState::deliver_offline_if_any(const std::shared_ptr<SessionBase>& s) 
     if (it == offline_inbox.end()) return;
     for (auto& m : it->second) {
         if (!is_blocked(s->name(), m.first)) {
-            s->send_text("DM: (офлайн) от " + m.first + ": " + m.second);
+            const std::string transformed = apply_dll_transform(m.first, m.second);
+            s->send_text("DM: (офлайн) от " + m.first + ": " + transformed);
         }
     }
     offline_inbox.erase(it);
@@ -802,11 +853,12 @@ void SharedState::process_line(const std::shared_ptr<SessionBase>& session, std:
         if (line.rfind("#massdm", 0) == 0) {
             std::string text = trim_after(line, "#massdm");
             if (text.empty()) { session->send_text("SYS: #massdm <text>"); return; }
+            const std::string transformed = apply_dll_transform(session->name(), text);
             for (auto& [name, sess] : online) {
                 auto target = sess.lock();
                 if (!target || target.get() == session.get()) continue;
                 if (is_blocked(name, session->name())) continue;
-                target->send_text("DM: от " + session->name() + ": " + text);
+                target->send_text("DM: от " + session->name() + ": " + transformed);
             }
             return;
         }
@@ -846,7 +898,11 @@ void SharedState::process_line(const std::shared_ptr<SessionBase>& session, std:
                 return;
             }
 
-            set_current_dll(dll_path.filename().string());
+            std::string load_error;
+            if (!load_dll(dll_path, load_error)) {
+                session->send_text("SYS: " + load_error);
+                return;
+            }
             notify_dll_event("Библиотека '" + dll_path.filename().string() + "' активирована через чат");
             session->send_text("SYS: DLL активирована: " + dll_path.filename().string());
             return;
@@ -857,11 +913,12 @@ void SharedState::process_line(const std::shared_ptr<SessionBase>& session, std:
             std::string to = (sp == std::string::npos) ? line.substr(1) : line.substr(1, sp-1);
             std::string text = (sp == std::string::npos) ? "" : line.substr(sp+1);
             if (to.empty() || text.empty()) { session->send_text("SYS: формат ЛС: @user <text>"); return; }
+            const std::string transformed = apply_dll_transform(session->name(), text);
 
             if (online.count(to)) {
                 auto recip = online[to].lock();
                 if (recip && !is_blocked(recip->name(), session->name())) {
-                    recip->send_text("DM: от " + session->name() + ": " + text);
+                    recip->send_text("DM: от " + session->name() + ": " + transformed);
                 }
                 return;
             }
@@ -869,7 +926,7 @@ void SharedState::process_line(const std::shared_ptr<SessionBase>& session, std:
             if (box.size() >= 10) {
                 session->send_text("SYS: ящик пользователя переполнен");
             } else {
-                box.emplace_back(session->name(), text);
+                box.emplace_back(session->name(), transformed);
                 session->send_text("SYS: сообщение сохранено в офлайн-ящике для " + to);
             }
             return;
@@ -1267,7 +1324,7 @@ private:
             fs::remove(dll_path);
 
             if (was_active) {
-                state_->set_current_dll("");
+                state_->unload_dll_if_active(dll_path.filename().string());
                 state_->notify_dll_event("Активная DLL удалена: " + dll_path.filename().string());
             }
 
