@@ -17,6 +17,19 @@ std::string trim(const std::string& value) {
     if (first >= last) return {};
     return std::string(first, last);
 }
+
+bool equals_ignore_case(const char* lhs, const char* rhs) {
+    if (!lhs || !rhs) return false;
+    while (*lhs && *rhs) {
+        if (std::tolower(static_cast<unsigned char>(*lhs)) !=
+            std::tolower(static_cast<unsigned char>(*rhs))) {
+            return false;
+        }
+        ++lhs;
+        ++rhs;
+    }
+    return *lhs == '\0' && *rhs == '\0';
+}
 }
 
 // Экспортируем функции в C-стиле, чтобы имена не были заманглены
@@ -34,12 +47,28 @@ void apply_chat_modifications(const char* message_type,
     // По умолчанию — пустая строка (нет цвета)
     color_code_buffer[0] = '\0';
 
-    // Если тип сообщения ORANGE — задаём цвет
-    if (std::strcmp(message_type, "ORANGE") == 0) {
-        const char* orange_code = "\033[38;5;214m"; // Оранжевый цвет
+    struct ColorRule {
+        const char* type;
+        const char* code;
+    };
 
-        // Аккуратно копируем в буфер, с гарантией \0 в конце
-        std::snprintf(color_code_buffer, static_cast<std::size_t>(buffer_size), "%s", orange_code);
+    // Можно расширить этот список своими правилами
+    static constexpr ColorRule rules[] = {
+        {"ORANGE", "\033[38;5;214m"}, // обычные сообщения
+        {"MD", "\033[38;5;196m"},     // личные сообщения
+        {"DM", "\033[38;5;196m"},     // альтернативный префикс лички
+        {"SYS", "\033[38;5;111m"},    // системные уведомления
+    };
+
+    for (const auto& rule : rules) {
+        if (equals_ignore_case(message_type, rule.type)) {
+            std::snprintf(
+                color_code_buffer,
+                static_cast<std::size_t>(buffer_size),
+                "%s",
+                rule.code);
+            break;
+        }
     }
 }
 
@@ -65,6 +94,9 @@ const char* chat_transform(const char* username, const char* text)
     if (colon_pos != std::string::npos) {
         type = trim(message.substr(0, colon_pos));
         message = trim(message.substr(colon_pos + 1));
+    } else {
+        // Если префикса нет (например, ЛС через @user <text>), используем ORANGE по умолчанию.
+        type = "ORANGE";
     }
 
     char color_code[32] = {0};

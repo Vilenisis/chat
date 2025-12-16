@@ -7,7 +7,7 @@
 #endif
 
 // Простейший пример DLL, которая добавляет цвет сообщениям.
-// Ожидается формат текста: `ORANGE: Текст сообщения`.
+// Ожидается формат текста: `TYPE: Текст сообщения` (например, ORANGE, MD, DM, SYS).
 // При необходимости можно добавить свои цвета в apply_chat_modifications.
 CHAT_DLL_EXPORT void apply_chat_modifications(const char* message_type,
                                               char* color_code_buffer,
