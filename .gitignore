@@ -1,0 +1,47 @@
+# Build artifacts
+build/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+*.cmake
+*.ninja
+*.ninja_deps
+*.ninja_log
+Makefile
+compile_commands.json
+
+# Compiled objects and libraries
+*.o
+*.obj
+*.lo
+*.la
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+*.exp
+*.lib
+*.pdb
+*.ilk
+*.pch
+*.mod
+*.out
+
+# Logs and runtime files
+*.log
+server_log.txt
+
+# Editor and OS metadata
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Node / web tooling
+node_modules/
+
+# Temporary files
+*.tmp
+*.swp
+*.swo

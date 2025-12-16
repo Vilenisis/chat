@@ -23,6 +23,12 @@ set_target_properties(command_dll PROPERTIES
 )
 target_include_directories(command_dll PUBLIC examples)
 
+add_library(chat_mods SHARED examples/chat_mods.cpp)
+set_target_properties(chat_mods PROPERTIES
+  WINDOWS_EXPORT_ALL_SYMBOLS TRUE
+)
+target_include_directories(chat_mods PUBLIC examples)
+
 add_executable(server server.cpp)
 add_executable(client client.cpp)
 add_executable(server_web server_web.cpp)
