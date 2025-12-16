@@ -36,7 +36,6 @@ endif()
 if (TARGET Boost::system)
   set(_boost_system_target Boost::system)
 else()
-  # Если Boost::system не найден, используем альтернативный вариант
   message(WARNING "Boost::system target not found, using alternative linking")
 endif()
 
