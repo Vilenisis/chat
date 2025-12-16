@@ -1297,7 +1297,11 @@ private:
             }
 
 #ifdef __APPLE__
-            std::string command = "g++ -std=c++17 -dynamiclib -fPIC -O2 -o \"" + dll_path.string() + "\" \"" + temp_cpp.string() + "\" 2>&1";
+std::string command =
+    "g++ -std=c++17 -O2 -dynamiclib "
+    "-fvisibility=default "
+    "-Wl,-exported_symbol,_chat_transform "
+    "-o \"" + dll_path.string() + "\" \"" + temp_cpp.string() + "\" 2>&1";
 #else
             std::string command = "g++ -std=c++17 -shared -fPIC -O2 -o \"" + dll_path.string() + "\" \"" + temp_cpp.string() + "\" 2>&1";
 #endif
