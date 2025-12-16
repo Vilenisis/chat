@@ -1,0 +1,85 @@
+using System;
+using System.Diagnostics;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Security;
+using System.Security.Permissions;
+using Microsoft.CodeAnalysis;
+
+[assembly: CompilationRelaxations(8)]
+[assembly: RuntimeCompatibility(WrapNonExceptionThrows = true)]
+[assembly: Debuggable(DebuggableAttribute.DebuggingModes.IgnoreSymbolStoreSequencePoints)]
+[assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
+[assembly: AssemblyVersion("0.0.0.0")]
+[module: UnverifiableCode]
+[module: RefSafetyRules(11)]
+namespace Microsoft.CodeAnalysis
+{
+    [CompilerGenerated]
+    [Embedded]
+    internal sealed class EmbeddedAttribute : Attribute
+    {
+    }
+}
+namespace System.Runtime.CompilerServices
+{
+    [CompilerGenerated]
+    [Embedded]
+    [AttributeUsage(AttributeTargets.Module, AllowMultiple = false, Inherited = false)]
+    internal sealed class RefSafetyRulesAttribute : Attribute
+    {
+        public readonly int Version;
+
+        public RefSafetyRulesAttribute(int P_0)
+        {
+            Version = P_0;
+        }
+    }
+}
+namespace RollPlugin
+{
+    public interface ICommand
+    {
+        string Name { get; }
+
+        void Execute(IPlayer sender, string[] args);
+    }
+    public interface IPlayer
+    {
+        string Name { get; }
+
+        void SendMessage(string message);
+
+        void BroadcastMessage(string message);
+    }
+    public class RollCommand : ICommand
+    {
+        private readonly Random _random = new Random();
+
+        public string Name
+        {
+            get
+            {
+                return "roll";
+            }
+        }
+
+        public void Execute(IPlayer sender, string[] args)
+        {
+            int num = _random.Next(1, 7);
+            string message = string.Format("{0} бросает кости и выпадает {1}!", sender.Name, num);
+            sender.BroadcastMessage(message);
+        }
+    }
+    public static class PluginEntry
+    {
+        public static void OnLoad(IServer server)
+        {
+            server.RegisterCommand(new RollCommand());
+        }
+    }
+    public interface IServer
+    {
+        void RegisterCommand(ICommand command);
+    }
+}
