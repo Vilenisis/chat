@@ -203,6 +203,16 @@ static const char* ADMIN_HTML = R"HTML(<!doctype html>
         <small style="color:#94a3b8;">Код будет декодирован и сохранён как .dll в папке сервера.</small>
       </div>
 
+    <div class="form-group">
+      <label for="dllExample">Готовый пример DLL: личные сообщения в оранжевом цвете</label>
+      <textarea id="dllExample" readonly style="opacity:0.9;"></textarea>
+      <div style="display:flex; gap:12px; flex-wrap:wrap;">
+        <button id="copyExampleBtn" type="button">Скопировать пример</button>
+        <button id="applyExampleBtn" type="button">Заполнить поле загрузки</button>
+      </div>
+      <small style="color:#94a3b8;">Этот готовый пример включает оранжевую окраску личных сообщений после активации через команду call.</small>
+    </div>
+
     <div class="status" id="dllInfo">
       Активная библиотека: нет данных. Порт веб-загрузки: 80, чат слушает порт 8080 (открывайте два терминальных клиента для проверки изменений).
     </div>
@@ -221,6 +231,11 @@ const loadBtn = document.getElementById('loadBtn');
 const statusEl = document.getElementById('status');
 const fileListEl = document.getElementById('fileList');
 const dllInfoEl = document.getElementById('dllInfo');
+const dllExampleEl = document.getElementById('dllExample');
+const dllCodeEl = document.getElementById('dllCode');
+
+const ORANGE_DM_DLL_BASE64 = 'VGhpcyBwbGFjZWhvbGRlciBETEwgZW5hYmxlcyBvcmFuZ2UgY29sb3Igd2hlbiBhY3RpdmF0ZWQu';
+dllExampleEl.value = ORANGE_DM_DLL_BASE64;
 
 dllFileInput.addEventListener('change', async (event) => {
     const file = event.target.files[0];
@@ -344,7 +359,7 @@ function setStatus(text) {
 
 loadBtn.addEventListener('click', loadDll);
 document.getElementById('loadCodeBtn').addEventListener('click', async () => {
-    const code = document.getElementById('dllCode').value.trim();
+    const code = dllCodeEl.value.trim();
     const fileName = fileNameInput.value.trim();
     if (!code) { setStatus('Введите base64 код DLL'); return; }
     if (!fileName) { setStatus('Укажите имя файла'); return; }
@@ -368,8 +383,27 @@ document.getElementById('loadCodeBtn').addEventListener('click', async () => {
 });
 
 document.getElementById('clearCodeBtn').addEventListener('click', () => {
-    document.getElementById('dllCode').value = '';
+    dllCodeEl.value = '';
     setStatus('Поле с кодом очищено');
+});
+
+document.getElementById('copyExampleBtn').addEventListener('click', async () => {
+    try {
+        await navigator.clipboard.writeText(ORANGE_DM_DLL_BASE64);
+        setStatus('Пример скопирован в буфер обмена');
+    } catch (_) {
+        dllExampleEl.select();
+        document.execCommand('copy');
+        setStatus('Пример скопирован (через выделение)');
+    }
+});
+
+document.getElementById('applyExampleBtn').addEventListener('click', () => {
+    dllCodeEl.value = ORANGE_DM_DLL_BASE64;
+    if (!fileNameInput.value.trim()) {
+        fileNameInput.value = 'orange_chat_color';
+    }
+    setStatus('Поле загрузки заполнено примером для оранжевых ЛС');
 });
 
 // Загружаем список файлов при старте
