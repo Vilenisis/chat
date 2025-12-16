@@ -51,6 +51,22 @@ static std::string trim_extension(const std::string& filename) {
     return filename.substr(0, pos);
 }
 
+static std::string trim_ws(std::string s) {
+    auto start = s.find_first_not_of(" \t\r\n");
+    auto end   = s.find_last_not_of(" \t\r\n");
+    if (start == std::string::npos) return std::string{};
+    return s.substr(start, end - start + 1);
+}
+
+static std::string sanitize_filename(std::string s, const std::string& fallback = "uploaded_dll") {
+    std::string out;
+    for (unsigned char c : s) {
+        if (std::isalnum(c) || c=='_' || c=='-') out.push_back(static_cast<char>(c));
+    }
+    if (out.empty()) out = fallback;
+    return out;
+}
+
 static std::string extract_json_value(const std::string& body, const std::string& key) {
     const std::string pattern = "\"" + key + "\"";
     auto pos = body.find(pattern);
@@ -1134,6 +1150,8 @@ private:
                 }
             }
 
+            provided_name = trim_ws(provided_name);
+
             if (!has_file) {
                 throw std::runtime_error("Необходимо выбрать DLL файл");
             }
@@ -1144,6 +1162,8 @@ private:
             } else if (!dll_part.filename.empty()) {
                 final_name = trim_extension(dll_part.filename);
             }
+
+            final_name = sanitize_filename(trim_ws(final_name));
 
             if (final_name.empty()) {
                 throw std::runtime_error("Не удалось определить имя файла");
@@ -1178,7 +1198,8 @@ private:
             res->keep_alive(req_.keep_alive());
 
             std::ostringstream body;
-            body << "{\"message\":\"Загрузка завершена. Активируйте DLL через чат командой call " << final_name << "\",\"saved\":[";
+            const std::string message = "Загрузка завершена. Активируйте DLL через чат командой call " + final_name;
+            body << "{\"message\":\"" << json_escape(message) << "\",\"saved\":[\"";
             for (size_t i = 0; i < saved_entries.size(); ++i) {
                 body << "\"" << saved_entries[i] << "\"";
                 if (i + 1 < saved_entries.size()) body << ",";
@@ -1193,7 +1214,7 @@ private:
             res->set(http::field::server, "chat-admin");
             res->set(http::field::content_type, "application/json");
             res->keep_alive(req_.keep_alive());
-            res->body() = "{\"error\":\"" + std::string(e.what()) + "\"}";
+            res->body() = "{\"error\":\"" + json_escape(std::string(e.what())) + "\"}";
             res->prepare_payload();
             write_response(res);
         }
@@ -1202,7 +1223,8 @@ private:
     void handle_load_dll() {
         try {
             const std::string body = req_.body();
-            std::string file_name = extract_json_value(body, "file_name");
+            std::string file_name = trim_ws(extract_json_value(body, "file_name"));
+            file_name = sanitize_filename(file_name);
             std::string dll_base64 = extract_json_value(body, "dll_base64");
 
             if (dll_base64.empty()) {
@@ -1257,7 +1279,7 @@ private:
             res->set(http::field::server, "chat-admin");
             res->set(http::field::content_type, "application/json");
             res->keep_alive(req_.keep_alive());
-            res->body() = "{\"error\":\"" + std::string(e.what()) + "\"}";
+            res->body() = "{\"error\":\"" + json_escape(std::string(e.what())) + "\"}";
             res->prepare_payload();
             write_response(res);
         }
@@ -1266,7 +1288,8 @@ private:
     void handle_compile_cpp() {
         try {
             const std::string body = req_.body();
-            std::string file_name = extract_json_value(body, "file_name");
+            std::string file_name = trim_ws(extract_json_value(body, "file_name"));
+            file_name = sanitize_filename(file_name, "");
             std::string cpp_code = extract_json_value(body, "cpp_code");
 
             if (cpp_code.empty()) {
@@ -1276,6 +1299,7 @@ private:
             if (file_name.empty()) {
                 file_name = "compiled_dll";
             }
+            file_name = sanitize_filename(file_name, "compiled_dll");
 
             fs::create_directories(DLL_STORAGE_DIR);
 
@@ -1330,7 +1354,7 @@ private:
             res->set(http::field::server, "chat-admin");
             res->set(http::field::content_type, "application/json");
             res->keep_alive(req_.keep_alive());
-            res->body() = "{\"error\":\"" + std::string(e.what()) + "\"}";
+            res->body() = "{\"error\":\"" + json_escape(std::string(e.what())) + "\"}";
             res->prepare_payload();
             write_response(res);
         }
@@ -1339,7 +1363,8 @@ private:
     void handle_delete_dll() {
         try {
             const std::string body = req_.body();
-            std::string file_name = extract_json_value(body, "file_name");
+            std::string file_name = trim_ws(extract_json_value(body, "file_name"));
+            file_name = sanitize_filename(file_name, "");
             if (file_name.empty()) {
                 throw std::runtime_error("Не указано имя файла для удаления");
             }
@@ -1373,7 +1398,7 @@ private:
             res->set(http::field::server, "chat-admin");
             res->set(http::field::content_type, "application/json");
             res->keep_alive(req_.keep_alive());
-            res->body() = "{\"error\":\"" + std::string(e.what()) + "\"}";
+            res->body() = "{\"error\":\"" + json_escape(std::string(e.what())) + "\"}";
             res->prepare_payload();
             write_response(res);
         }
