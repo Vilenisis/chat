@@ -1138,6 +1138,10 @@ private:
             handle_list_files();
             return;
         }
+        if (req_.method() == http::verb::get && req_.target() == "/list_dlls") {
+            handle_list_files();
+            return;
+        }
 
         // Статус активной DLL
         if (req_.method() == http::verb::get && req_.target() == "/dll_status") {
@@ -1482,6 +1486,9 @@ std::string command =
                 if (!first) body << ",";
                 body << "\"" << entry.path().filename().string() << "\"";
                 first = false;
+                auto ext = entry.path().extension().string();
+                std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+                if (ext != ".dll") continue;
             }
         }
 

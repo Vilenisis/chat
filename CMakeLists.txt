@@ -93,3 +93,19 @@ set_target_properties(server client server_web working_server PROPERTIES
   BUILD_WITH_INSTALL_RPATH TRUE
   INSTALL_RPATH_USE_LINK_PATH TRUE
 )
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTORCC ON)
+
+find_package(Qt6 REQUIRED COMPONENTS Widgets Network)
+
+add_executable(client_gui
+  gui/main.cpp
+  gui/MainWindow.cpp
+  gui/MainWindow.h
+  gui/ChatWindow.cpp
+  gui/ChatWindow.h
+)
+
+target_link_libraries(client_gui PRIVATE Qt6::Widgets Qt6::Network)
+
