@@ -24,6 +24,8 @@
 #include <unordered_set>
 #include <utility>
 #include <vector>
+#include <cstdio>
+#include <sys/wait.h>
 
 namespace beast = boost::beast;
 namespace http  = beast::http;
@@ -152,6 +154,39 @@ static std::vector<MultipartPart> parse_multipart(const std::string& body, const
     return parts;
 }
 
+static std::pair<int, std::string> run_command_capture(const std::string& command) {
+    std::array<char, 256> buffer{};
+    std::string output;
+
+    FILE* pipe = popen(command.c_str(), "r");
+    if (!pipe) {
+        throw std::runtime_error("Не удалось запустить команду: " + command);
+    }
+
+    while (fgets(buffer.data(), static_cast<int>(buffer.size()), pipe)) {
+        output += buffer.data();
+    }
+
+    int rc = pclose(pipe);
+    int exit_code = WIFEXITED(rc) ? WEXITSTATUS(rc) : rc;
+    return {exit_code, output};
+}
+
+static std::string json_escape(const std::string& input) {
+    std::string result;
+    result.reserve(input.size());
+    for (char c : input) {
+        switch (c) {
+            case '\\': result += "\\\\"; break;
+            case '"': result += "\\\""; break;
+            case '\n': result += "\\n"; break;
+            case '\r': break;
+            default: result += c; break;
+        }
+    }
+    return result;
+}
+
 // Встроенная страница админ-панели
 static const char* ADMIN_HTML = R"HTML(<!doctype html>
 <html lang="ru"><head>
@@ -231,11 +266,7 @@ const loadBtn = document.getElementById('loadBtn');
 const statusEl = document.getElementById('status');
 const fileListEl = document.getElementById('fileList');
 const dllInfoEl = document.getElementById('dllInfo');
-const dllExampleEl = document.getElementById('dllExample');
-const dllCodeEl = document.getElementById('dllCode');
-
-const ORANGE_DM_DLL_BASE64 = 'VGhpcyBwbGFjZWhvbGRlciBETEwgZW5hYmxlcyBvcmFuZ2UgY29sb3Igd2hlbiBhY3RpdmF0ZWQu';
-dllExampleEl.value = ORANGE_DM_DLL_BASE64;
+const cppCodeInput = document.getElementById('cppCode');
 
 dllFileInput.addEventListener('change', async (event) => {
     const file = event.target.files[0];
@@ -387,23 +418,35 @@ document.getElementById('clearCodeBtn').addEventListener('click', () => {
     setStatus('Поле с кодом очищено');
 });
 
-document.getElementById('copyExampleBtn').addEventListener('click', async () => {
+document.getElementById('compileBtn').addEventListener('click', async () => {
+    const code = cppCodeInput.value.trim();
+    let fileName = fileNameInput.value.trim();
+    if (!fileName) { fileName = 'compiled_dll'; }
+    if (!code) { setStatus('Введите C++ код'); return; }
+
+    setStatus('Компиляция и сборка...');
     try {
-        await navigator.clipboard.writeText(ORANGE_DM_DLL_BASE64);
-        setStatus('Пример скопирован в буфер обмена');
-    } catch (_) {
-        dllExampleEl.select();
-        document.execCommand('copy');
-        setStatus('Пример скопирован (через выделение)');
+        const response = await fetch('/compile_cpp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ file_name: fileName, cpp_code: code })
+        });
+        const result = await response.json();
+        if (response.ok) {
+            setStatus('DLL собрана: ' + result.saved);
+            updateFileList();
+            updateDllStatus();
+        } else {
+            setStatus('Ошибка компиляции: ' + result.error);
+        }
+    } catch (error) {
+        setStatus('Ошибка сети: ' + error.message);
     }
 });
 
-document.getElementById('applyExampleBtn').addEventListener('click', () => {
-    dllCodeEl.value = ORANGE_DM_DLL_BASE64;
-    if (!fileNameInput.value.trim()) {
-        fileNameInput.value = 'orange_chat_color';
-    }
-    setStatus('Поле загрузки заполнено примером для оранжевых ЛС');
+document.getElementById('clearCppBtn').addEventListener('click', () => {
+    cppCodeInput.value = '';
+    setStatus('Поле с C++ кодом очищено');
 });
 
 // Загружаем список файлов при старте
@@ -959,6 +1002,11 @@ private:
             return;
         }
 
+        if (req_.method() == http::verb::post && req_.target() == "/compile_cpp") {
+            handle_compile_cpp();
+            return;
+        }
+
         if (req_.method() == http::verb::post && req_.target() == "/delete_dll") {
             handle_delete_dll();
             return;
@@ -1143,6 +1191,71 @@ private:
             res->set(http::field::content_type, "application/json");
             res->keep_alive(req_.keep_alive());
             res->body() = "{\"saved\":\"" + dll_path.filename().string() + "\"}";
+            res->prepare_payload();
+            write_response(res);
+        } catch (const std::exception& e) {
+            auto res = std::make_shared<http::response<http::string_body>>(http::status::bad_request, req_.version());
+            res->set(http::field::server, "chat-admin");
+            res->set(http::field::content_type, "application/json");
+            res->keep_alive(req_.keep_alive());
+            res->body() = "{\"error\":\"" + std::string(e.what()) + "\"}";
+            res->prepare_payload();
+            write_response(res);
+        }
+    }
+
+    void handle_compile_cpp() {
+        try {
+            const std::string body = req_.body();
+            std::string file_name = extract_json_value(body, "file_name");
+            std::string cpp_code = extract_json_value(body, "cpp_code");
+
+            if (cpp_code.empty()) {
+                throw std::runtime_error("Не передан cpp_code для компиляции");
+            }
+
+            if (file_name.empty()) {
+                file_name = "compiled_dll";
+            }
+
+            fs::create_directories(DLL_STORAGE_DIR);
+
+            fs::path dll_path = fs::path(DLL_STORAGE_DIR) / file_name;
+            if (dll_path.extension().empty()) {
+                dll_path.replace_extension(".dll");
+            }
+
+            auto ext = dll_path.extension().string();
+            std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+            if (ext != ".dll") {
+                throw std::runtime_error("Можно сохранять только .dll файлы");
+            }
+
+            fs::path temp_cpp = fs::temp_directory_path() / (dll_path.stem().string() + ".cpp");
+            {
+                std::ofstream cpp_out(temp_cpp);
+                cpp_out << cpp_code;
+            }
+
+            std::string command = "g++ -std=c++17 -shared -fPIC -O2 -o \"" + dll_path.string() + "\" \"" + temp_cpp.string() + "\" 2>&1";
+            auto [exit_code, output] = run_command_capture(command);
+            fs::remove(temp_cpp);
+
+            if (exit_code != 0) {
+                throw std::runtime_error("Компиляция завершилась с кодом " + std::to_string(exit_code) + ": " + output);
+            }
+
+            if (!fs::exists(dll_path)) {
+                throw std::runtime_error("Компиляция не создала DLL файл");
+            }
+
+            state_->notify_dll_event("Скомпилирована и сохранена DLL '" + dll_path.filename().string() + "'. Активируйте её командой call " + dll_path.stem().string());
+
+            auto res = std::make_shared<http::response<http::string_body>>(http::status::ok, req_.version());
+            res->set(http::field::server, "chat-admin");
+            res->set(http::field::content_type, "application/json");
+            res->keep_alive(req_.keep_alive());
+            res->body() = "{\"saved\":\"" + dll_path.filename().string() + "\",\"log\":\"" + json_escape(output) + "\"}";
             res->prepare_payload();
             write_response(res);
         } catch (const std::exception& e) {
