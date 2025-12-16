@@ -239,6 +239,16 @@ static const char* ADMIN_HTML = R"HTML(<!doctype html>
       </div>
 
     <div class="form-group">
+      <label for="cppCode">C++ код для сборки DLL:</label>
+      <textarea id="cppCode" placeholder="#include <string>\nextern \"C\" const char* chat_color() { return \"orange\"; }"></textarea>
+      <div style="display:flex; gap:12px; flex-wrap:wrap;">
+        <button id="compileBtn">Собрать DLL из кода</button>
+        <button id="clearCppBtn" type="button">Очистить</button>
+      </div>
+      <small style="color:#94a3b8;">Код будет скомпилирован в DLL и сохранён на сервере. Активируйте её в чате командой call &lt;имя&gt;.</small>
+    </div>
+
+    <div class="form-group">
       <label for="dllExample">Готовый пример DLL: личные сообщения в оранжевом цвете</label>
       <textarea id="dllExample" readonly style="opacity:0.9;"></textarea>
       <div style="display:flex; gap:12px; flex-wrap:wrap;">
@@ -266,7 +276,23 @@ const loadBtn = document.getElementById('loadBtn');
 const statusEl = document.getElementById('status');
 const fileListEl = document.getElementById('fileList');
 const dllInfoEl = document.getElementById('dllInfo');
+const dllCodeEl = document.getElementById('dllCode');
+const dllExampleEl = document.getElementById('dllExample');
 const cppCodeInput = document.getElementById('cppCode');
+
+const exampleDllBase64 = 'TVpUaGlzIGlzIGEgcGxhY2Vob2xkZXIgRExMIGZvciB1cGxvYWQgdGVzdGluZyBwdXJwb3NlcyBvbmx5Lg==';
+const exampleCppCode = `#include <string>
+
+extern "C" const char* message_prefix() {
+    return "[orange dll] ";
+}
+
+extern "C" const char* chat_color() {
+    return "orange";
+}`;
+
+dllExampleEl.value = exampleDllBase64;
+cppCodeInput.value = exampleCppCode;
 
 dllFileInput.addEventListener('change', async (event) => {
     const file = event.target.files[0];
@@ -416,6 +442,22 @@ document.getElementById('loadCodeBtn').addEventListener('click', async () => {
 document.getElementById('clearCodeBtn').addEventListener('click', () => {
     dllCodeEl.value = '';
     setStatus('Поле с кодом очищено');
+});
+
+document.getElementById('copyExampleBtn').addEventListener('click', async () => {
+    const text = dllExampleEl.value.trim();
+    if (!text) { setStatus('Пример пуст'); return; }
+    try {
+        await (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject());
+        setStatus('Пример скопирован в буфер обмена');
+    } catch (error) {
+        setStatus('Не удалось скопировать пример');
+    }
+});
+
+document.getElementById('applyExampleBtn').addEventListener('click', () => {
+    dllCodeEl.value = dllExampleEl.value;
+    setStatus('Пример добавлен в поле загрузки');
 });
 
 document.getElementById('compileBtn').addEventListener('click', async () => {
