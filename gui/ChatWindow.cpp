@@ -151,16 +151,16 @@ ChatWindow::ChatWindow(QTcpSocket* socket, const QString& ip, quint16 port, cons
 
     connect(refreshDllBtn_, &QPushButton::clicked, this, &ChatWindow::onRefreshDllsClicked);
     connect(activateDllBtn_, &QPushButton::clicked, this, &ChatWindow::onActivateDllClicked);
-    connect(refreshUsersBtn_, &QPushButton::clicked, this, &ChatWindow::requestOnlineUsers);
+    connect(refreshUsersBtn_, &QPushButton::clicked, this, [this]() { requestOnlineUsers(true); });
 
     whoTimer_ = new QTimer(this);
     whoTimer_->setInterval(12000);
-    connect(whoTimer_, &QTimer::timeout, this, &ChatWindow::requestOnlineUsers);
+    connect(whoTimer_, &QTimer::timeout, this, [this]() { requestOnlineUsers(false); });
     whoTimer_->start();
 
     // стартово попробуем обновить список DLL
     onRefreshDllsClicked();
-    requestOnlineUsers();
+    requestOnlineUsers(false);
 }
 
 void ChatWindow::onSendClicked() {
@@ -298,6 +298,11 @@ void ChatWindow::appendLineColored(const QString& rawLine) {
                 onlineList_->addItem(name.trimmed());
             }
         }
+
+        if (!showOnlineAnnouncementPending_) {
+            return;
+        }
+        showOnlineAnnouncementPending_ = false;
     }
 
     // ---- SYS ----
@@ -398,10 +403,11 @@ void ChatWindow::onActivateDllClicked() {
     appendLineColored("SYS: Sent -> call " + base);
 }
 
-void ChatWindow::requestOnlineUsers() {
+void ChatWindow::requestOnlineUsers(bool showAnnouncement) {
     if (!socket_ || socket_->state() != QAbstractSocket::ConnectedState) {
         return;
     }
+    showOnlineAnnouncementPending_ = showOnlineAnnouncementPending_ || showAnnouncement;
     sendLine("#who");
 }
 
