@@ -16,6 +16,8 @@
 #include <QColor>
 #include <optional>
 
+#include <QDebug>
+
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
 #include <QNetworkReply>
@@ -171,6 +173,9 @@ static QString strip_ansi(const QString& s) {
 
 
 void ChatWindow::appendLineColored(const QString& rawLine) {
+    qDebug() << "RAW =" << rawLine;
+    qDebug() << "HEX =" << rawLine.toUtf8().toHex();
+
     // 1) соберём формат из ANSI SGR последовательностей
     QTextCharFormat fmt;
     {
