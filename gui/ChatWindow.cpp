@@ -170,61 +170,89 @@ static QString strip_ansi(const QString& s) {
     out.remove(re);
     return out;
 }
+static std::optional<QColor> detectAnsiFgColor(const QString& s) {
+    // 256-color: ESC[38;5;N m
+    static QRegularExpression re256("\x1B\\[38;5;([0-9]{1,3})m");
+    auto m = re256.match(s);
+    if (m.hasMatch()) {
+        bool ok=false;
+        int idx = m.captured(1).toInt(&ok);
+        if (ok) return xterm256_to_qcolor(idx);
+    }
+
+    // basic: ESC[3Xm
+    static QRegularExpression reBasic("\x1B\\[(3[0-7])m");
+    m = reBasic.match(s);
+    if (m.hasMatch()) {
+        int code = m.captured(1).toInt();
+        static const int ansi[8][3] = {
+            {0,0,0},{128,0,0},{0,128,0},{128,128,0},{0,0,128},{128,0,128},{0,128,128},{192,192,192}
+        };
+        int k = code - 30;
+        return QColor(ansi[k][0], ansi[k][1], ansi[k][2]);
+    }
+
+    return std::nullopt;
+}
 
 
 void ChatWindow::appendLineColored(const QString& rawLine) {
-    qDebug() << "RAW =" << rawLine;
-    qDebug() << "HEX =" << rawLine.toUtf8().toHex();
-
-    // 1) соберём формат из ANSI SGR последовательностей
-    QTextCharFormat fmt;
-    {
-        static QRegularExpression re("\x1B\\[([0-9;]*)m");
-        auto it = re.globalMatch(rawLine);
-        while (it.hasNext()) {
-            auto m = it.next();
-            apply_sgr_to_format(m.captured(1), fmt);
-        }
-    }
-
-    // 2) уберём ANSI из текста
-    const QString line = strip_ansi(rawLine);
-
-    // 3) дальше — твоя логика SYS/MSG, но теперь используем fmt как базовый
     QTextCursor cur(chatView_->document());
     cur.movePosition(QTextCursor::End);
 
+    // 1. Определяем цвет из ANSI (если есть)
+    QTextCharFormat textFmt;
+    if (auto c = detectAnsiFgColor(rawLine)) {
+        textFmt.setForeground(*c);
+    }
+
+    // 2. Убираем ANSI
+    const QString line = strip_ansi(rawLine);
+
+    // ---- SYS ----
     if (line.startsWith("SYS:")) {
-        QTextCharFormat f = fmt;
+        QTextCharFormat f;
         f.setFontItalic(true);
         cur.insertText(line + "\n", f);
         chatView_->setTextCursor(cur);
         return;
     }
 
-    // MSG: Nick: text — выделим ник жирным, но цвет оставим из fmt
-    if (line.startsWith("MSG:")) {
-        QString afterPrefix = line.mid(4).trimmed(); // "Nick: text"
-        int nickEnd = afterPrefix.indexOf(':');
-        if (nickEnd > 0) {
-            QString nickPart = afterPrefix.left(nickEnd).trimmed();
-            QString tail = afterPrefix.mid(nickEnd); // ": text"
+    // ---- MSG / FAV ----
+    if (line.startsWith("MSG:") || line.startsWith("FAV:")) {
+        const bool isFav = line.startsWith("FAV:");
+        const int prefixLen = isFav ? 4 : 4; // "MSG:" / "FAV:"
 
-            QTextCharFormat baseFmt = fmt;
-            cur.insertText("MSG: ", baseFmt);
+        // ищем "Nick: "
+        int colon = line.indexOf(':', prefixLen);
+        if (colon > 0) {
+            QString prefix = line.left(prefixLen + 1);          // "MSG: "
+            QString nick = line.mid(prefixLen + 1, colon - prefixLen); // "Vilen1"
+            QString text = line.mid(colon + 1).trimmed();        // "hi"
 
-            QTextCharFormat nickFmt = fmt;
+            // prefix
+            QTextCharFormat baseFmt;
+            cur.insertText(prefix, baseFmt);
+
+            // nick
+            QTextCharFormat nickFmt;
             nickFmt.setFontWeight(QFont::Bold);
-            cur.insertText(nickPart, nickFmt);
+            cur.insertText(nick, nickFmt);
 
-            cur.insertText(tail + "\n", baseFmt);
+            // ": "
+            cur.insertText(": ", baseFmt);
+
+            // message text (цвет из DLL)
+            cur.insertText(text, textFmt);
+            cur.insertText("\n");
+
             chatView_->setTextCursor(cur);
             return;
         }
     }
 
-    // default
-    cur.insertText(line + "\n", fmt);
+    // ---- fallback ----
+    cur.insertText(line + "\n");
     chatView_->setTextCursor(cur);
 }
 
