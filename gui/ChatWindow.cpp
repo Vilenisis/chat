@@ -13,6 +13,8 @@
 #include <QTextCursor>
 #include <QTextCharFormat>
 #include <QRegularExpression>
+#include <QColor>
+#include <optional>
 
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
@@ -96,82 +98,131 @@ void ChatWindow::sendLine(const QString& s) {
     socket_->flush();
 }
 
-QString ChatWindow::stripAnsi(const QString& s) const {
-    // убираем ANSI escape sequences вида \x1B[ ... m
+
+static std::optional<QColor> xterm256_to_qcolor(int idx) {
+    if (idx < 0 || idx > 255) return std::nullopt;
+
+    // 0–15: базовые (приблизительно)
+    static const int base[16][3] = {
+        {0,0,0},{128,0,0},{0,128,0},{128,128,0},{0,0,128},{128,0,128},{0,128,128},{192,192,192},
+        {128,128,128},{255,0,0},{0,255,0},{255,255,0},{0,0,255},{255,0,255},{0,255,255},{255,255,255}
+    };
+    if (idx < 16) return QColor(base[idx][0], base[idx][1], base[idx][2]);
+
+    // 16–231: 6x6x6 color cube
+    if (idx >= 16 && idx <= 231) {
+        int c = idx - 16;
+        int r = c / 36;
+        int g = (c / 6) % 6;
+        int b = c % 6;
+        auto conv = [](int v) { return v == 0 ? 0 : 55 + v * 40; };
+        return QColor(conv(r), conv(g), conv(b));
+    }
+
+    // 232–255: grayscale
+    int level = 8 + (idx - 232) * 10;
+    return QColor(level, level, level);
+}
+
+static void apply_sgr_to_format(const QString& sgr, QTextCharFormat& fmt) {
+    // sgr = "38;5;214" или "31" и т.д.
+    const auto parts = sgr.split(';', Qt::SkipEmptyParts);
+
+    for (int i = 0; i < parts.size(); ++i) {
+        bool ok = false;
+        int code = parts[i].toInt(&ok);
+        if (!ok) continue;
+
+        if (code == 0) { // reset
+            fmt = QTextCharFormat{};
+        } else if (code == 1) { // bold
+            fmt.setFontWeight(QFont::Bold);
+        } else if (code == 3) { // italic
+            fmt.setFontItalic(true);
+        } else if (code >= 30 && code <= 37) { // basic fg
+            static const int ansi[8][3] = {
+                {0,0,0},{128,0,0},{0,128,0},{128,128,0},{0,0,128},{128,0,128},{0,128,128},{192,192,192}
+            };
+            int k = code - 30;
+            fmt.setForeground(QColor(ansi[k][0], ansi[k][1], ansi[k][2]));
+        } else if (code == 39) { // default fg
+            fmt.clearForeground();
+        } else if (code == 38) {
+            // extended fg: 38;5;N  (мы поддержим только 256-color)
+            if (i + 2 < parts.size() && parts[i+1] == "5") {
+                bool ok2 = false;
+                int idx = parts[i+2].toInt(&ok2);
+                if (ok2) {
+                    auto c = xterm256_to_qcolor(idx);
+                    if (c) fmt.setForeground(*c);
+                }
+                i += 2;
+            }
+        }
+    }
+}
+
+static QString strip_ansi(const QString& s) {
     static QRegularExpression re("\x1B\\[[0-9;]*m");
     QString out = s;
     out.remove(re);
     return out;
 }
 
+
 void ChatWindow::appendLineColored(const QString& rawLine) {
-    const QString line = stripAnsi(rawLine);
-
+    // 1) соберём формат из ANSI SGR последовательностей
     QTextCharFormat fmt;
-    // Простая раскраска
-    if (line.startsWith("SYS:")) {
-        fmt.setFontItalic(true);
-    } else if (line.startsWith("MSG:")) {
-        fmt.setFontWeight(QFont::Normal);
-    }
-
-    // Выделим ник внутри "MSG: Nick: text"
-    // Формат сервера у тебя: "MSG: Vilen: hello"
-    QString nickPart;
-    QString rest = line;
-
-    if (line.startsWith("MSG:")) {
-        // пытаемся вытащить ник
-        const int firstColon = line.indexOf(':'); // после MSG
-        const int secondColon = line.indexOf(':', firstColon + 1); // после Nick
-        if (secondColon > 0) {
-            // "MSG: " = 4 + возможный пробел
-            // возьмем аккуратно: после "MSG:" и пробела
-            QString afterPrefix = line.mid(4).trimmed(); // "Vilen: text"
-            int nickEnd = afterPrefix.indexOf(':');
-            if (nickEnd > 0) {
-                nickPart = afterPrefix.left(nickEnd).trimmed();
-                rest = "MSG: " + afterPrefix.mid(0); // оставим как есть
-            }
+    {
+        static QRegularExpression re("\x1B\\[([0-9;]*)m");
+        auto it = re.globalMatch(rawLine);
+        while (it.hasNext()) {
+            auto m = it.next();
+            apply_sgr_to_format(m.captured(1), fmt);
         }
     }
 
+    // 2) уберём ANSI из текста
+    const QString line = strip_ansi(rawLine);
+
+    // 3) дальше — твоя логика SYS/MSG, но теперь используем fmt как базовый
     QTextCursor cur(chatView_->document());
     cur.movePosition(QTextCursor::End);
 
-    // SYS — отдельный стиль
     if (line.startsWith("SYS:")) {
         QTextCharFormat f = fmt;
+        f.setFontItalic(true);
         cur.insertText(line + "\n", f);
         chatView_->setTextCursor(cur);
         return;
     }
 
-    // MSG — выделим ник
-    if (line.startsWith("MSG:") && !nickPart.isEmpty()) {
-        // Вставим "MSG: "
-        QTextCharFormat baseFmt;
-        cur.insertText("MSG: ", baseFmt);
-
-        QTextCharFormat nickFmt;
-        nickFmt.setFontWeight(QFont::Bold);
-        cur.insertText(nickPart, nickFmt);
-
-        QTextCharFormat base2;
-        // остаток после "Nick"
+    // MSG: Nick: text — выделим ник жирным, но цвет оставим из fmt
+    if (line.startsWith("MSG:")) {
         QString afterPrefix = line.mid(4).trimmed(); // "Nick: text"
         int nickEnd = afterPrefix.indexOf(':');
-        QString tail = afterPrefix.mid(nickEnd); // ": text"
-        cur.insertText(tail + "\n", base2);
+        if (nickEnd > 0) {
+            QString nickPart = afterPrefix.left(nickEnd).trimmed();
+            QString tail = afterPrefix.mid(nickEnd); // ": text"
 
-        chatView_->setTextCursor(cur);
-        return;
+            QTextCharFormat baseFmt = fmt;
+            cur.insertText("MSG: ", baseFmt);
+
+            QTextCharFormat nickFmt = fmt;
+            nickFmt.setFontWeight(QFont::Bold);
+            cur.insertText(nickPart, nickFmt);
+
+            cur.insertText(tail + "\n", baseFmt);
+            chatView_->setTextCursor(cur);
+            return;
+        }
     }
 
     // default
     cur.insertText(line + "\n", fmt);
     chatView_->setTextCursor(cur);
 }
+
 
 void ChatWindow::onReadyRead() {
     recvBuf_.append(socket_->readAll());
@@ -237,27 +288,38 @@ void ChatWindow::onRefreshDllsClicked() {
         }
 
         QJsonParseError pe{};
-        QJsonDocument doc = QJsonDocument::fromJson(data, &pe);
-        if (pe.error != QJsonParseError::NoError || !doc.isObject()) {
-            appendLineColored("SYS: DLL list response is not valid JSON.");
+        QJsonDocument doc = QJsonDocument::fromJson(data);
+        dllCombo_->clear();
+
+        if (doc.isArray()) {
+            // ✅ формат админки: ["a.dll","b.dll"]
+            QJsonArray arr = doc.array();
+            for (const auto& v : arr) {
+                dllCombo_->addItem(v.toString());
+            }
+            appendLineColored("SYS: DLL list updated.");
             return;
         }
 
-        QJsonObject obj = doc.object();
-        QJsonArray files = obj.value("files").toArray();
+        if (doc.isObject()) {
+            // 🔁 на будущее, если сделаешь расширенный API
+            QJsonObject obj = doc.object();
+            QJsonArray files = obj.value("files").toArray();
+            for (const auto& v : files) {
+                dllCombo_->addItem(v.toString());
+            }
 
-        dllCombo_->clear();
-        for (const auto& v : files) {
-            dllCombo_->addItem(v.toString());
+            QString active = obj.value("active").toString();
+            if (!active.isEmpty()) {
+                int i = dllCombo_->findText(active);
+                if (i >= 0) dllCombo_->setCurrentIndex(i);
+                appendLineColored("SYS: Active DLL: " + active);
+            } else {
+                appendLineColored("SYS: DLL list updated.");
+            }
+            return;
         }
 
-        const QString active = obj.value("active").toString();
-        if (!active.isEmpty()) {
-            int i = dllCombo_->findText(active);
-            if (i >= 0) dllCombo_->setCurrentIndex(i);
-            appendLineColored("SYS: Active DLL: " + active);
-        } else {
-            appendLineColored("SYS: DLL list updated.");
-        }
+        appendLineColored("SYS: DLL list response has unknown format.");
     });
 }
