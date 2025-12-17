@@ -7,8 +7,10 @@ class QTextEdit;
 class QLineEdit;
 class QPushButton;
 class QComboBox;
-class QNetworkAccessManager;
+class QLabel;
+class QListWidget;
 class QTimer;
+class QNetworkAccessManager;
 
 class ChatWindow : public QMainWindow {
     Q_OBJECT
@@ -22,6 +24,7 @@ private slots:
 
     void onRefreshDllsClicked();
     void onActivateDllClicked();
+    void requestOnlineUsers();
 
 private:
     void appendLineColored(const QString& line);
@@ -34,12 +37,18 @@ private:
     QTextEdit* chatView_{};
     QLineEdit* input_{};
     QPushButton* sendBtn_{};
+    QLabel* headerLabel_{};
 
     // DLL switcher
     QComboBox* dllCombo_{};
     QPushButton* refreshDllBtn_{};
     QPushButton* activateDllBtn_{};
     QLineEdit* manualDllEdit_{};
+
+    // Online users
+    QListWidget* onlineList_{};
+    QPushButton* refreshUsersBtn_{};
+    QTimer* whoTimer_{};
 
     QNetworkAccessManager* net_{};
     QString ip_;
