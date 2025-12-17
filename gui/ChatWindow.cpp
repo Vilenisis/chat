@@ -1,6 +1,8 @@
 #include "ChatWindow.h"
 
+#include <QAbstractSocket>
 #include <QComboBox>
+#include <QFrame>
 #include <QTcpSocket>
 #include <QTextEdit>
 #include <QLineEdit>
@@ -14,6 +16,10 @@
 #include <QTextCharFormat>
 #include <QRegularExpression>
 #include <QColor>
+#include <QGroupBox>
+#include <QListWidget>
+#include <QTimer>
+#include <QAbstractItemView>
 #include <optional>
 
 #include <QDebug>
@@ -32,44 +38,110 @@ ChatWindow::ChatWindow(QTcpSocket* socket, const QString& ip, quint16 port, cons
     socket_->setParent(this);
 
     auto* root = new QWidget(this);
+    root->setObjectName("chatRoot");
+    root->setStyleSheet(R"(
+        QWidget#chatRoot { background-color: #0b1021; }
+        QFrame#card { background-color: #0f172a; border: 1px solid #1f2937; border-radius: 12px; }
+        QGroupBox#groupCard { background-color: #0f172a; border: 1px solid #1f2937; border-radius: 12px; margin-top: 12px; }
+        QGroupBox#groupCard::title { subcontrol-origin: margin; left: 12px; padding: 0 6px; color: #9ca3af; font-weight: 600; }
+        QLabel#title { color: #e2e8f0; font-size: 20px; font-weight: 700; }
+        QLabel#subtitle { color: #9ca3af; }
+        QLabel#pill { background-color: #10b98133; color: #34d399; padding: 6px 10px; border-radius: 14px; font-weight: 600; }
+        QTextEdit { background-color: #0b1220; color: #e5e7eb; border-radius: 10px; border: 1px solid #1f2937; font-family: "JetBrains Mono", monospace; }
+        QListWidget { background-color: #0b1220; color: #e5e7eb; border-radius: 10px; border: 1px solid #1f2937; }
+        QLineEdit { background-color: #0b1220; color: #e5e7eb; border-radius: 8px; border: 1px solid #1f2937; padding: 8px; }
+        QPushButton { background-color: #2563eb; color: white; border: none; border-radius: 10px; padding: 10px 14px; font-weight: 600; }
+        QPushButton:hover { background-color: #1d4ed8; }
+        QPushButton#ghost { background-color: transparent; color: #9ca3af; border: 1px dashed #1f2937; }
+    )");
+
     auto* main = new QVBoxLayout(root);
+    main->setContentsMargins(16, 16, 16, 16);
+    main->setSpacing(12);
 
-    // Top info + DLL switcher
-    auto* topRow = new QHBoxLayout();
-    topRow->addWidget(new QLabel(QString("Connected: %1:%2 as %3").arg(ip_).arg(port_).arg(nick_), root));
+    auto* header = new QFrame(root);
+    header->setObjectName("card");
+    auto* headerLayout = new QVBoxLayout(header);
+    headerLabel_ = new QLabel(QString("Подключено к %1:%2").arg(ip_).arg(port_), header);
+    headerLabel_->setObjectName("title");
+    headerLayout->addWidget(headerLabel_);
+    auto* sub = new QLabel(tr("Вы вошли как %1").arg(nick_), header);
+    sub->setObjectName("subtitle");
+    headerLayout->addWidget(sub);
+    main->addWidget(header);
 
-    topRow->addStretch();
+    auto* content = new QHBoxLayout();
+    content->setSpacing(14);
+    main->addLayout(content, 1);
 
-    dllCombo_ = new QComboBox(root);
-    dllCombo_->setMinimumWidth(200);
-    refreshDllBtn_ = new QPushButton("Refresh DLLs", root);
-    activateDllBtn_ = new QPushButton("Activate", root);
+    auto* chatCard = new QFrame(root);
+    chatCard->setObjectName("card");
+    auto* chatLayout = new QVBoxLayout(chatCard);
 
-    manualDllEdit_ = new QLineEdit(root);
-    manualDllEdit_->setPlaceholderText("or type dll name (e.g. orange)");
+    auto* chatHeader = new QHBoxLayout();
+    auto* chatTitle = new QLabel(tr("Комнаты и сообщения"), chatCard);
+    chatTitle->setObjectName("subtitle");
+    chatHeader->addWidget(chatTitle);
+    chatHeader->addStretch();
+    auto* livePill = new QLabel(tr("online"), chatCard);
+    livePill->setObjectName("pill");
+    chatHeader->addWidget(livePill);
+    chatLayout->addLayout(chatHeader);
 
-    topRow->addWidget(dllCombo_);
-    topRow->addWidget(refreshDllBtn_);
-    topRow->addWidget(activateDllBtn_);
-    topRow->addWidget(manualDllEdit_);
-
-    main->addLayout(topRow);
-
-    chatView_ = new QTextEdit(root);
+    chatView_ = new QTextEdit(chatCard);
     chatView_->setReadOnly(true);
-    main->addWidget(chatView_, 1);
+    chatView_->setPlaceholderText(tr("Сообщения появятся здесь"));
+    chatLayout->addWidget(chatView_, 1);
 
     auto* bottomRow = new QHBoxLayout();
-    input_ = new QLineEdit(root);
-    sendBtn_ = new QPushButton("Send", root);
+    input_ = new QLineEdit(chatCard);
+    input_->setPlaceholderText(tr("Напишите сообщение..."));
+    sendBtn_ = new QPushButton(tr("Отправить"), chatCard);
 
     bottomRow->addWidget(input_, 1);
     bottomRow->addWidget(sendBtn_);
-    main->addLayout(bottomRow);
+    chatLayout->addLayout(bottomRow);
+
+    content->addWidget(chatCard, 2);
+
+    auto* sideCard = new QFrame(root);
+    sideCard->setObjectName("card");
+    auto* sideLayout = new QVBoxLayout(sideCard);
+
+    auto* dllBox = new QGroupBox(tr("Плагины DLL"), sideCard);
+    dllBox->setObjectName("groupCard");
+    auto* dllLayout = new QVBoxLayout(dllBox);
+    dllCombo_ = new QComboBox(dllBox);
+    dllCombo_->setMinimumWidth(220);
+    dllCombo_->setPlaceholderText(tr("Выберите библиотеку"));
+    refreshDllBtn_ = new QPushButton(tr("Обновить список"), dllBox);
+    activateDllBtn_ = new QPushButton(tr("Активировать"), dllBox);
+    manualDllEdit_ = new QLineEdit(dllBox);
+    manualDllEdit_->setPlaceholderText(tr("или введите имя (например, orange)"));
+
+    dllLayout->addWidget(dllCombo_);
+    dllLayout->addWidget(manualDllEdit_);
+    dllLayout->addWidget(refreshDllBtn_);
+    dllLayout->addWidget(activateDllBtn_);
+    sideLayout->addWidget(dllBox);
+
+    auto* usersBox = new QGroupBox(tr("В сети сейчас"), sideCard);
+    usersBox->setObjectName("groupCard");
+    auto* usersLayout = new QVBoxLayout(usersBox);
+    onlineList_ = new QListWidget(usersBox);
+    onlineList_->setSelectionMode(QAbstractItemView::NoSelection);
+    onlineList_->setVerticalScrollMode(QAbstractItemView::ScrollPerPixel);
+    refreshUsersBtn_ = new QPushButton(tr("Обновить список"), usersBox);
+    usersLayout->addWidget(onlineList_, 1);
+    usersLayout->addWidget(refreshUsersBtn_);
+    sideLayout->addWidget(usersBox, 1);
+
+    sideLayout->addStretch();
+    content->addWidget(sideCard, 1);
 
     setCentralWidget(root);
-    setWindowTitle("Chat");
-    resize(900, 520);
+    setWindowTitle("Chat Lounge");
+    resize(1100, 640);
 
     connect(sendBtn_, &QPushButton::clicked, this, &ChatWindow::onSendClicked);
     connect(input_, &QLineEdit::returnPressed, this, &ChatWindow::onSendClicked);
@@ -79,9 +151,16 @@ ChatWindow::ChatWindow(QTcpSocket* socket, const QString& ip, quint16 port, cons
 
     connect(refreshDllBtn_, &QPushButton::clicked, this, &ChatWindow::onRefreshDllsClicked);
     connect(activateDllBtn_, &QPushButton::clicked, this, &ChatWindow::onActivateDllClicked);
+    connect(refreshUsersBtn_, &QPushButton::clicked, this, &ChatWindow::requestOnlineUsers);
+
+    whoTimer_ = new QTimer(this);
+    whoTimer_->setInterval(12000);
+    connect(whoTimer_, &QTimer::timeout, this, &ChatWindow::requestOnlineUsers);
+    whoTimer_->start();
 
     // стартово попробуем обновить список DLL
     onRefreshDllsClicked();
+    requestOnlineUsers();
 }
 
 void ChatWindow::onSendClicked() {
@@ -209,6 +288,18 @@ void ChatWindow::appendLineColored(const QString& rawLine) {
     // 2. Убираем ANSI
     const QString line = strip_ansi(rawLine);
 
+    if (line.startsWith("SYS: Online:")) {
+        QString usersPart = line.mid(QString("SYS: Online:").size()).trimmed();
+        onlineList_->clear();
+        if (usersPart.isEmpty()) {
+            onlineList_->addItem(tr("Сейчас никого нет в сети"));
+        } else {
+            for (const QString& name : usersPart.split(',', Qt::SkipEmptyParts)) {
+                onlineList_->addItem(name.trimmed());
+            }
+        }
+    }
+
     // ---- SYS ----
     if (line.startsWith("SYS:")) {
         QTextCharFormat f;
@@ -275,6 +366,12 @@ void ChatWindow::onReadyRead() {
 }
 
 void ChatWindow::onDisconnected() {
+    if (whoTimer_) {
+        whoTimer_->stop();
+    }
+    if (headerLabel_) {
+        headerLabel_->setText(tr("Отключено от %1:%2").arg(ip_).arg(port_));
+    }
     appendLineColored("SYS: Disconnected.");
 }
 
@@ -299,6 +396,13 @@ void ChatWindow::onActivateDllClicked() {
     const QString base = baseNameNoExt(name);
     sendLine("call " + base);
     appendLineColored("SYS: Sent -> call " + base);
+}
+
+void ChatWindow::requestOnlineUsers() {
+    if (!socket_ || socket_->state() != QAbstractSocket::ConnectedState) {
+        return;
+    }
+    sendLine("#who");
 }
 
 void ChatWindow::onRefreshDllsClicked() {
