@@ -24,7 +24,7 @@ private slots:
 
     void onRefreshDllsClicked();
     void onActivateDllClicked();
-    void requestOnlineUsers();
+    void requestOnlineUsers(bool showAnnouncement = false);
 
 private:
     void appendLineColored(const QString& line);
@@ -49,6 +49,7 @@ private:
     QListWidget* onlineList_{};
     QPushButton* refreshUsersBtn_{};
     QTimer* whoTimer_{};
+    bool showOnlineAnnouncementPending_ = false;
 
     QNetworkAccessManager* net_{};
     QString ip_;
