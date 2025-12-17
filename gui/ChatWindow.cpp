@@ -221,7 +221,7 @@ void ChatWindow::onRefreshDllsClicked() {
     // Мы предполагаем, что у админки есть JSON endpoint:
     // GET http://IP/list_dlls  -> {"files":["a.dll","b.dll"],"active":"orange.dll"}
     // Если у тебя другой путь — скажешь, я подгоню.
-    QUrl url(QString("http://%1/list_dlls").arg(ip_));
+    QUrl url(QString("http://%1:80/list_files").arg(ip_));
     QNetworkRequest req(url);
 
     QNetworkReply* r = net_->get(req);

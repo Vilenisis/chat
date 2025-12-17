@@ -1483,13 +1483,16 @@ std::string command =
         if (fs::exists(DLL_STORAGE_DIR)) {
             for (const auto& entry : fs::directory_iterator(DLL_STORAGE_DIR)) {
                 if (!entry.is_regular_file()) continue;
-                if (!first) body << ",";
-                body << "\"" << entry.path().filename().string() << "\"";
-                first = false;
+
                 auto ext = entry.path().extension().string();
                 std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
                 if (ext != ".dll") continue;
+
+                if (!first) body << ",";
+                body << "\"" << json_escape(entry.path().filename().string()) << "\"";
+                first = false;
             }
+
         }
 
         body << "]";
