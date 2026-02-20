@@ -3,6 +3,9 @@
 #include <thread>
 #include <atomic>
 #include <string>
+#include <fcntl.h>
+#include <unistd.h>
+#include <termios.h>
 
 using boost::asio::ip::tcp;
 using namespace std;
@@ -13,13 +16,47 @@ static const char* COL_SYS = "\033[36m"; // циан
 static const char* COL_FAV = "\033[33m"; // жёлтый
 static const char* COL_RST = "\033[0m";
 
+static int openSerialPort(const string& portPath) {
+    int fd = open(portPath.c_str(), O_RDWR | O_NOCTTY | O_SYNC);
+    if (fd < 0) {
+        perror(("open serial " + portPath).c_str());
+        return -1;
+    }
+
+    termios tty{};
+    if (tcgetattr(fd, &tty) != 0) {
+        perror("tcgetattr");
+        close(fd);
+        return -1;
+    }
+
+    cfsetospeed(&tty, B115200);
+    cfsetispeed(&tty, B115200);
+
+    tty.c_cflag = (tty.c_cflag & ~CSIZE) | CS8;
+    tty.c_iflag &= ~IGNBRK;
+    tty.c_lflag = 0;
+    tty.c_oflag = 0;
+    tty.c_cc[VMIN]  = 0;
+    tty.c_cc[VTIME] = 5;
+
+    if (tcsetattr(fd, TCSANOW, &tty) != 0) {
+        perror("tcsetattr");
+        close(fd);
+        return -1;
+    }
+
+    return fd;
+}
+
 int main(int argc, char** argv) {
     if (argc < 3) {
-        cerr << "usage: client <host> <port>\n";
+        cerr << "usage: client <host> <port> [serial_port]\n";
         return 1;
     }
     string host = argv[1];
     string port = argv[2];
+    string serialPort = (argc >= 4) ? argv[3] : "/dev/cu.usbmodem1101";
 
     try {
         boost::asio::io_context io;
@@ -28,6 +65,13 @@ int main(int argc, char** argv) {
         tcp::socket socket(io);
         boost::asio::connect(socket, endpoints);
         cout << "Connected to " << host << ":" << port << endl;
+
+        int serialFd = openSerialPort(serialPort);
+        if (serialFd >= 0) {
+            cout << "Serial connected: " << serialPort << "\n";
+        } else {
+            cerr << "Serial disabled (can't open " << serialPort << ")\n";
+        }
 
         atomic<bool> running{true};
 
@@ -61,6 +105,14 @@ int main(int argc, char** argv) {
                 } else {
                     cout << line << "\n";
                 }
+
+                if (serialFd >= 0) {
+                    string serialMsg = "MSG: " + line + "\n";
+                    ssize_t written = write(serialFd, serialMsg.c_str(), serialMsg.size());
+                    if (written < 0) {
+                        perror("write serial");
+                    }
+                }
             }
         });
 
@@ -84,6 +136,7 @@ int main(int argc, char** argv) {
         }
         running = false;
         if (reader.joinable()) reader.join();
+        if (serialFd >= 0) close(serialFd);
 
     } catch (const exception& e) {
         cerr << "client error: " << e.what() << endl;
